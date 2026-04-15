@@ -1,0 +1,198 @@
+# ⚡ EduQuiz Arena — Full Stack Quiz Platform
+
+**Dark Theme • Multiplayer • Real-time • XP System**
+
+---
+
+## 📁 Project Structure
+
+```
+eduquiz/
+├── frontend/
+│   └── index.html          ← Complete React frontend (single file)
+│
+└── backend/
+    ├── server.js           ← Node.js + Express + Socket.io backend
+    ├── seed.js             ← Database seeder (sample questions)
+    ├── package.json        ← Node.js dependencies
+    └── .env.example        ← Environment variables template
+```
+
+---
+
+## 🚀 Features
+
+### ✅ Frontend (React + HTML + CSS)
+| Feature | Description |
+|---|---|
+| 🏠 Landing Page | Hero section with stats, features grid, CTA buttons |
+| 🔐 Auth Pages | Login & Signup with animated form |
+| 📊 Dashboard | Stats cards, subject progress, live rooms preview |
+| 📝 Solo Quiz | Subject selection, timer, instant feedback, XP rewards |
+| ⚔️ Multiplayer | Room list, create room, lobby, real-time quiz battle |
+| 🏆 Leaderboard | Weekly/Monthly/All-time rankings |
+| 👤 Profile | XP, level, achievements, subject stats |
+| 📋 History | Past quiz attempts with scores |
+
+### ✅ Backend (Node.js + Express + MongoDB + Socket.io)
+| Feature | Description |
+|---|---|
+| 🔐 Auth API | Register, Login, JWT tokens, streak tracking |
+| ❓ Questions API | CRUD, subject filter, difficulty, user submission |
+| 📊 Quiz API | Submit answers, calculate XP, save results |
+| 🏆 Leaderboard API | Weekly/monthly/all-time aggregation |
+| 🏠 Rooms API | Create/list multiplayer rooms |
+| ⚡ Real-time Socket | Join room, ready up, submit answer, live scores, chat |
+| 👮 Admin Routes | Approve questions, manage users |
+
+---
+
+## ⚙️ Backend Setup
+
+### 1. Install Dependencies
+```bash
+cd backend
+npm install
+```
+
+### 2. Configure Environment
+```bash
+cp .env.example .env
+# Edit .env with your MongoDB URI and JWT secret
+```
+
+### 3. Start MongoDB
+```bash
+# Local MongoDB
+mongod
+
+# OR use MongoDB Atlas (cloud) — update MONGO_URI in .env
+```
+
+### 4. Seed the Database
+```bash
+node seed.js
+# Adds 22 sample questions across 6 subjects
+```
+
+### 5. Start the Server
+```bash
+npm run dev     # Development (with nodemon)
+npm start       # Production
+```
+
+Server runs at: `http://localhost:5000`
+
+---
+
+## 🌐 API Reference
+
+### Auth
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/register` | Create account |
+| POST | `/api/auth/login` | Login & get token |
+| GET | `/api/auth/me` | Get current user |
+
+### Quiz
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/questions?subject=Math&difficulty=Medium` | Fetch questions |
+| POST | `/api/questions` | Submit a question |
+| POST | `/api/quiz/submit` | Submit quiz answers |
+| GET | `/api/quiz/history` | User quiz history |
+| GET | `/api/quiz/stats` | User statistics |
+
+### Leaderboard
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/leaderboard?period=weekly` | Get rankings |
+
+### Multiplayer
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/rooms` | List open rooms |
+| POST | `/api/rooms` | Create a room |
+
+---
+
+## 🔌 Socket.io Events
+
+### Client → Server
+| Event | Payload | Description |
+|---|---|---|
+| `join_room` | `{ roomCode, playerName }` | Join a multiplayer room |
+| `player_ready` | — | Signal ready to start |
+| `start_game` | — | Host starts the game |
+| `submit_answer` | `{ questionIndex, answer, timeTaken }` | Submit answer |
+| `chat_message` | `{ message }` | Send chat message |
+
+### Server → Client
+| Event | Payload | Description |
+|---|---|---|
+| `joined` | Room info + players | Successfully joined |
+| `room_update` | Players list + phase | Player joined/left/readied |
+| `question` | Question data (no answer) | New question starts |
+| `timer_tick` | `{ timeLeft }` | Countdown per question |
+| `score_update` | All player scores | Someone answered |
+| `question_end` | Correct answer + scores | Question time up |
+| `game_end` | Final scores + winner | Game finished |
+| `chat_message` | `{ name, message, time }` | Chat broadcast |
+| `error` | `{ msg }` | Error message |
+
+---
+
+## 🔌 Frontend ↔ Backend Integration
+
+To connect the React frontend to the backend, add these to your `index.html`:
+
+```html
+<!-- Socket.io client -->
+<script src="http://localhost:5000/socket.io/socket.io.js"></script>
+```
+
+```javascript
+// Connect socket
+const socket = io('http://localhost:5000', {
+  auth: { token: localStorage.getItem('token') }
+});
+
+// Join a room
+socket.emit('join_room', { roomCode: 'QUIZ01', playerName: 'Rahul' });
+
+// Listen for questions
+socket.on('question', (data) => { /* render question */ });
+
+// Submit answer
+socket.emit('submit_answer', { questionIndex: 0, answer: 2, timeTaken: 8 });
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, HTML5, CSS3 (custom vars), Babel (browser) |
+| Backend | Node.js, Express.js |
+| Database | MongoDB + Mongoose ODM |
+| Real-time | Socket.io (WebSockets) |
+| Auth | JWT + bcryptjs |
+| Fonts | Orbitron, Syne, Space Grotesk |
+
+---
+
+## 🎨 Design Highlights
+
+- **Dark theme** with colorful accent system (violet, cyan, pink, green, orange)
+- **Orbitron** font for scores/timers → futuristic feel
+- **Syne** for headings → bold & modern
+- CSS custom properties for instant theming
+- Smooth animations: fadeUp, float, pulse, slideIn
+- Gradient borders on stat cards
+- Live pulse dot for active rooms
+- Real-time thinking indicators for opponents
+
+---
+
+*Built with ❤️ — EduQuiz Arena*

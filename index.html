@@ -1,0 +1,2412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EduQuiz Arena — Multiplayer Quiz Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+:root {
+  --bg: #070b14;
+  --bg2: #0c1020;
+  --surface: #111827;
+  --surface2: #1a2235;
+  --surface3: #232f45;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8edf8;
+  --text-muted: #6b7a99;
+  --text-faint: #3a4560;
+
+  --violet: #7c5cfc;
+  --violet-light: #a78bfa;
+  --violet-glow: rgba(124,92,252,0.25);
+  --cyan: #22d3ee;
+  --cyan-glow: rgba(34,211,238,0.2);
+  --pink: #f472b6;
+  --pink-glow: rgba(244,114,182,0.2);
+  --green: #10b981;
+  --green-glow: rgba(16,185,129,0.2);
+  --orange: #f59e0b;
+  --orange-glow: rgba(245,158,11,0.2);
+  --red: #ef4444;
+
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.5);
+  --shadow-lg: 0 12px 60px rgba(0,0,0,0.7);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+::selection { background: var(--violet); color: #fff; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+/* BACKGROUND GLOW */
+body::before {
+  content: '';
+  position: fixed;
+  top: -200px; left: -200px;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,92,252,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -200px; right: -200px;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34,211,238,0.05) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root { position: relative; z-index: 1; }
+
+/* ANIMATIONS */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+@keyframes glow-pulse { 0%,100% { box-shadow: 0 0 20px var(--violet-glow); } 50% { box-shadow: 0 0 40px var(--violet-glow), 0 0 60px var(--violet-glow); } }
+@keyframes countDown { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 283; } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes bounce { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes typing { 0%,100% { opacity: 0; } 50% { opacity: 1; } }
+
+/* NAV */
+.nav {
+  background: rgba(7,11,20,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  height: 62px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  position: sticky; top: 0; z-index: 500;
+}
+.brand {
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, var(--violet-light), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: flex; align-items: center; gap: 9px;
+  cursor: pointer;
+}
+.brand-icon {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--violet), var(--cyan));
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  -webkit-text-fill-color: white;
+  animation: float 3s ease-in-out infinite;
+}
+.nav-center { display: flex; gap: 4px; }
+.nav-btn {
+  background: none; border: none;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13.5px; font-weight: 500;
+  color: var(--text-muted);
+  padding: 6px 14px; border-radius: 8px;
+  cursor: pointer; transition: all 0.18s;
+}
+.nav-btn:hover { background: var(--surface2); color: var(--text); }
+.nav-btn.active { background: rgba(124,92,252,0.15); color: var(--violet-light); }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.xp-badge {
+  background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(244,114,182,0.1));
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-size: 12.5px; font-weight: 700;
+  color: var(--orange);
+  display: flex; align-items: center; gap: 5px;
+}
+.user-chip {
+  background: linear-gradient(135deg, var(--violet), #5b21b6);
+  border-radius: 100px;
+  padding: 5px 14px 5px 6px;
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.user-avatar {
+  width: 24px; height: 24px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 20px;
+  border-radius: var(--radius);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13.5px; font-weight: 600;
+  cursor: pointer; border: none;
+  transition: all 0.2s;
+  white-space: nowrap; text-decoration: none;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--violet), #5b21b6);
+  color: #fff;
+  box-shadow: 0 0 24px var(--violet-glow);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 40px var(--violet-glow); }
+.btn-cyan {
+  background: linear-gradient(135deg, var(--cyan), #0891b2);
+  color: #000; font-weight: 700;
+  box-shadow: 0 0 24px var(--cyan-glow);
+}
+.btn-cyan:hover { transform: translateY(-2px); box-shadow: 0 0 40px var(--cyan-glow); }
+.btn-pink {
+  background: linear-gradient(135deg, var(--pink), #db2777);
+  color: #fff;
+  box-shadow: 0 0 24px var(--pink-glow);
+}
+.btn-pink:hover { transform: translateY(-2px); }
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--border2);
+  color: var(--text-muted);
+}
+.btn-outline:hover { border-color: var(--violet-light); color: var(--violet-light); }
+.btn-ghost { background: var(--surface2); color: var(--text-muted); }
+.btn-ghost:hover { background: var(--surface3); color: var(--text); }
+.btn-green { background: linear-gradient(135deg, var(--green), #059669); color: #fff; }
+.btn-sm { padding: 6px 14px; font-size: 12.5px; }
+.btn-lg { padding: 13px 32px; font-size: 15px; font-weight: 700; }
+.btn-xl { padding: 15px 40px; font-size: 16px; font-weight: 700; border-radius: 12px; }
+.btn-disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+/* CARD */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+.card-glow {
+  background: var(--surface);
+  border: 1px solid rgba(124,92,252,0.25);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: 0 0 30px rgba(124,92,252,0.1);
+}
+
+/* INPUT */
+.input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  transition: all 0.18s;
+  outline: none;
+}
+.input:focus { border-color: var(--violet); box-shadow: 0 0 0 3px var(--violet-glow); }
+.input::placeholder { color: var(--text-faint); }
+select.input option { background: var(--surface2); }
+.label {
+  display: block;
+  font-size: 11.5px; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 7px;
+}
+.form-group { margin-bottom: 18px; }
+
+/* BADGE */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 100px;
+  font-size: 11.5px; font-weight: 600;
+}
+.badge-violet { background: rgba(124,92,252,0.15); color: var(--violet-light); }
+.badge-cyan { background: rgba(34,211,238,0.12); color: var(--cyan); }
+.badge-pink { background: rgba(244,114,182,0.12); color: var(--pink); }
+.badge-green { background: rgba(16,185,129,0.12); color: var(--green); }
+.badge-orange { background: rgba(245,158,11,0.12); color: var(--orange); }
+.badge-red { background: rgba(239,68,68,0.12); color: var(--red); }
+
+/* TOAST */
+.toast-container {
+  position: fixed; top: 72px; right: 20px;
+  z-index: 9999; pointer-events: none;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13px; font-weight: 600;
+  color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.3s ease;
+  min-width: 240px;
+}
+.toast-success { border-color: var(--green); color: var(--green); }
+.toast-error { border-color: var(--red); color: var(--red); }
+.toast-info { border-color: var(--cyan); color: var(--cyan); }
+
+/* ════════ LANDING PAGE - NEW DESIGN ════════ */
+.landing { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* Animated background particles */
+.landing-bg {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.landing-bg .particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: particleFloat linear infinite;
+  opacity: 0.3;
+}
+@keyframes particleFloat {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 0.3; }
+  90% { opacity: 0.3; }
+  100% { transform: translateY(-100px) scale(1); opacity: 0; }
+}
+
+/* Hero Section */
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 40px 80px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Magnetic gradient orbs */
+.hero-orbs {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: orbPulse 8s ease-in-out infinite;
+}
+.hero-orb:nth-child(1) {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(124,92,252,0.15), transparent 70%);
+  top: -10%; left: -5%;
+  animation-delay: 0s;
+}
+.hero-orb:nth-child(2) {
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(34,211,238,0.12), transparent 70%);
+  bottom: -10%; right: -5%;
+  animation-delay: 2s;
+}
+.hero-orb:nth-child(3) {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(244,114,182,0.1), transparent 70%);
+  top: 40%; right: 20%;
+  animation-delay: 4s;
+}
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1) translate(0, 0); }
+  25% { transform: scale(1.1) translate(20px, -20px); }
+  50% { transform: scale(0.95) translate(-10px, 10px); }
+  75% { transform: scale(1.05) translate(-20px, -10px); }
+}
+
+/* Eyebrow badge with shimmer */
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(124,92,252,0.1), rgba(34,211,238,0.1));
+  border: 1px solid rgba(124,92,252,0.3);
+  border-radius: 100px;
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--violet-light);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+  animation: badgeSlideIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hero-eyebrow::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  animation: shimmerSweep 3s ease-in-out infinite;
+}
+@keyframes badgeSlideIn {
+  from { opacity: 0; transform: translateY(-20px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes shimmerSweep {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* Hero title with 3D effect */
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(40px, 8vw, 80px);
+  line-height: 1.05;
+  font-weight: 800;
+  margin-bottom: 24px;
+  animation: titleReveal 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+  letter-spacing: -0.03em;
+  text-shadow: 0 0 80px rgba(124,92,252,0.3);
+}
+.hero h1 .line-1 {
+  display: block;
+  background: linear-gradient(135deg, #e8edf8 0%, var(--violet-light) 50%, var(--cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 4s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+.hero h1 .line-2 {
+  display: block;
+  background: linear-gradient(135deg, var(--pink) 0%, var(--orange) 50%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 30px rgba(244,114,182,0.3));
+}
+@keyframes titleReveal {
+  from { opacity: 0; transform: translateY(40px) scale(0.95); filter: blur(10px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Hero subtitle */
+.hero-sub {
+  font-size: 17px;
+  color: var(--text-muted);
+  max-width: 560px;
+  line-height: 1.75;
+  margin: 0 auto 48px;
+  animation: fadeInUp 0.8s ease 0.4s both;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero buttons with magnetic hover */
+.hero-btns {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: fadeInUp 0.8s ease 0.5s both;
+}
+.hero-btns .btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hero-btns .btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.hero-btns .btn:hover::after { opacity: 1; }
+.hero-btns .btn:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(124,92,252,0.3);
+}
+.hero-btns .btn-primary {
+  background: linear-gradient(135deg, var(--violet), #6d28d9);
+  position: relative;
+}
+.hero-btns .btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--cyan), var(--pink));
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s;
+  filter: blur(8px);
+}
+.hero-btns .btn-primary:hover::before { opacity: 0.6; }
+
+/* Hero stats with counter animation */
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin-top: 80px;
+  border-top: 1px solid var(--border);
+  padding-top: 50px;
+  flex-wrap: wrap;
+  animation: fadeInUp 0.8s ease 0.6s both;
+  width: 100%;
+  max-width: 800px;
+}
+.hero-stat {
+  padding: 0 40px;
+  border-right: 1px solid var(--border);
+  text-align: center;
+  position: relative;
+  transition: all 0.3s;
+}
+.hero-stat:hover {
+  background: rgba(124,92,252,0.05);
+}
+.hero-stat:last-child { border-right: none; }
+.hero-stat .hs-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--violet-light), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: block;
+}
+.hero-stat .hs-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ════════ FEATURES SECTION - NEW DESIGN ════════ */
+.features-section {
+  padding: 80px 40px 100px;
+  position: relative;
+  z-index: 1;
+}
+.features-section .section-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+.features-section .section-header h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(28px, 5vw, 42px);
+  font-weight: 800;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--text), var(--violet-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.features-section .section-header p {
+  font-size: 15px;
+  color: var(--text-muted);
+  max-width: 500px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Feature cards with glassmorphism and 3D tilt */
+.feat {
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 32px 28px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+.feat::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(135deg, var(--violet), var(--cyan), var(--pink), var(--violet));
+  background-size: 300% 300%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.5;
+  transition: opacity 0.4s;
+  animation: borderRotate 4s linear infinite;
+}
+.feat:hover::before { opacity: 1; }
+@keyframes borderRotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Inner glow on hover */
+.feat::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(124,92,252,0.08) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.feat:hover::after { opacity: 1; }
+
+.feat:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(124,92,252,0.3);
+  box-shadow: 0 20px 60px rgba(124,92,252,0.15), 0 0 40px rgba(124,92,252,0.05);
+}
+
+.feat-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin-bottom: 20px;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.feat:hover .feat-icon-wrap {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Icon background gradients */
+.feat-1 .feat-icon-wrap { background: linear-gradient(135deg, rgba(124,92,252,0.2), rgba(124,92,252,0.05)); }
+.feat-2 .feat-icon-wrap { background: linear-gradient(135deg, rgba(34,211,238,0.2), rgba(34,211,238,0.05)); }
+.feat-3 .feat-icon-wrap { background: linear-gradient(135deg, rgba(244,114,182,0.2), rgba(244,114,182,0.05)); }
+.feat-4 .feat-icon-wrap { background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.05)); }
+.feat-5 .feat-icon-wrap { background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05)); }
+.feat-6 .feat-icon-wrap { background: linear-gradient(135deg, rgba(167,139,250,0.2), rgba(167,139,250,0.05)); }
+
+.feat h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--text);
+  transition: color 0.3s;
+}
+.feat:hover h3 { color: var(--violet-light); }
+
+.feat p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+/* Floating animation for staggered cards */
+.feat {
+  animation: floatCard 6s ease-in-out infinite;
+}
+.feat:nth-child(1) { animation-delay: 0s; }
+.feat:nth-child(2) { animation-delay: 0.5s; }
+.feat:nth-child(3) { animation-delay: 1s; }
+.feat:nth-child(4) { animation-delay: 1.5s; }
+.feat:nth-child(5) { animation-delay: 2s; }
+.feat:nth-child(6) { animation-delay: 2.5s; }
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.feat:hover { animation-play-state: paused; }
+
+/* CTA Section */
+.cta-section {
+  padding: 80px 40px 100px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+.cta-card {
+  max-width: 700px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, rgba(124,92,252,0.1), rgba(34,211,238,0.05));
+  border: 1px solid rgba(124,92,252,0.2);
+  border-radius: 24px;
+  padding: 60px 40px;
+  position: relative;
+  overflow: hidden;
+}
+.cta-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--violet), var(--cyan), var(--pink));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.6;
+}
+.cta-card h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 800;
+  margin-bottom: 16px;
+  position: relative;
+}
+.cta-card p {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+  position: relative;
+}
+.cta-card .btn {
+  position: relative;
+  z-index: 1;
+}
+
+/* ════════ AUTH PAGE ════════ */
+.auth-page {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px 20px;
+  position: relative;
+}
+.auth-wrap {
+  display: grid; grid-template-columns: 1fr 1fr;
+  max-width: 860px; width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.5s ease;
+}
+.auth-left {
+  background: linear-gradient(155deg, #0d0527 0%, #0a1240 50%, #180830 100%);
+  padding: 50px 40px;
+  display: flex; flex-direction: column; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.auth-left::before {
+  content: '';
+  position: absolute;
+  width: 350px; height: 350px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,92,252,0.15), transparent 60%);
+  top: -80px; right: -80px;
+}
+.auth-left::after {
+  content: '';
+  position: absolute;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(34,211,238,0.1), transparent 60%);
+  bottom: -40px; left: -40px;
+}
+.auth-brand {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px; font-weight: 700;
+  background: linear-gradient(135deg, var(--violet-light), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 32px;
+  position: relative; z-index: 1;
+}
+.auth-left h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px; font-weight: 800;
+  color: #fff; margin-bottom: 12px;
+  position: relative; z-index: 1;
+}
+.auth-left p { font-size: 13.5px; color: rgba(255,255,255,0.5); margin-bottom: 32px; position: relative; z-index: 1; }
+.auth-check {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13.5px; color: rgba(255,255,255,0.65);
+  margin-bottom: 11px;
+  position: relative; z-index: 1;
+}
+.auth-check-ico { color: var(--green); font-size: 13px; font-weight: 700; }
+.auth-right { background: var(--surface); padding: 50px 40px; }
+.auth-tabs { display: flex; gap: 0; margin-bottom: 30px; border-bottom: 1px solid var(--border); }
+.auth-tab {
+  background: none; border: none;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px; font-weight: 600;
+  color: var(--text-muted);
+  padding: 8px 18px 11px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.18s;
+}
+.auth-tab.active { color: var(--violet-light); border-bottom-color: var(--violet); }
+
+/* ════════ DASHBOARD LAYOUT ════════ */
+.dash-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: calc(100vh - 62px);
+}
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  display: flex; flex-direction: column;
+  position: sticky; top: 62px;
+  height: calc(100vh - 62px);
+  overflow-y: auto;
+}
+.sb-user {
+  padding: 14px 18px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+.sb-avatar {
+  width: 46px; height: 46px;
+  background: linear-gradient(135deg, var(--violet), var(--cyan));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', monospace;
+  font-size: 16px; font-weight: 700;
+  color: #fff; margin-bottom: 10px;
+  box-shadow: 0 0 20px var(--violet-glow);
+}
+.sb-name { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+.sb-xp { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+.sb-xp-bar {
+  height: 4px; background: var(--surface3);
+  border-radius: 100px; overflow: hidden;
+}
+.sb-xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--violet), var(--cyan));
+  border-radius: 100px;
+  transition: width 0.5s ease;
+}
+.sb-nav { padding: 0 10px; }
+.sb-section { font-size: 10.5px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.1em; padding: 14px 10px 6px; }
+.sb-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 9px;
+  font-size: 13.5px; font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer; transition: all 0.18s;
+  margin-bottom: 2px;
+  border: none; background: none;
+  width: 100%; text-align: left;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.sb-link:hover { background: var(--surface2); color: var(--text); }
+.sb-link.active { background: rgba(124,92,252,0.12); color: var(--violet-light); font-weight: 600; }
+.sb-link .ico { font-size: 16px; }
+.sb-link .badge-count {
+  margin-left: auto;
+  background: var(--violet);
+  color: #fff;
+  font-size: 10.5px; font-weight: 700;
+  padding: 1px 7px; border-radius: 100px;
+}
+
+/* MAIN CONTENT */
+.main { background: var(--bg2); padding: 30px; overflow-y: auto; }
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.page-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+.page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+
+/* STATS ROW */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  position: relative; overflow: hidden;
+  transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); }
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+}
+.stat-violet::before { background: linear-gradient(90deg, var(--violet), var(--violet-light)); }
+.stat-cyan::before { background: linear-gradient(90deg, var(--cyan), #67e8f9); }
+.stat-pink::before { background: linear-gradient(90deg, var(--pink), var(--orange)); }
+.stat-green::before { background: linear-gradient(90deg, var(--green), #6ee7b7); }
+.stat-icon { font-size: 22px; margin-bottom: 10px; }
+.stat-val { font-family: 'Orbitron', monospace; font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+.stat-label { font-size: 12px; color: var(--text-muted); }
+.stat-delta { font-size: 11.5px; margin-top: 6px; font-weight: 600; }
+.stat-up { color: var(--green); }
+.stat-down { color: var(--red); }
+
+/* QUIZ GRID */
+.subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.subject-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 18px;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative; overflow: hidden;
+  text-align: center;
+}
+.subject-card:hover { border-color: rgba(124,92,252,0.35); transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+.subject-card .s-icon { font-size: 32px; margin-bottom: 10px; display: block; }
+.subject-card .s-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+.subject-card .s-count { font-size: 12px; color: var(--text-muted); }
+.subject-card .s-diff { margin-top: 10px; }
+.s-progress { height: 3px; background: var(--surface3); border-radius: 100px; margin-top: 10px; overflow: hidden; }
+.s-progress-fill { height: 100%; border-radius: 100px; }
+
+/* QUIZ PAGE */
+.quiz-wrap {
+  max-width: 760px; margin: 0 auto;
+  animation: fadeUp 0.5s ease;
+}
+.quiz-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px; flex-wrap: wrap; gap: 14px;
+}
+.q-bubbles { display: flex; gap: 6px; flex-wrap: wrap; }
+.q-bubble {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--text-muted);
+  transition: all 0.2s; cursor: default;
+}
+.q-bubble.current {
+  background: var(--violet);
+  border-color: var(--violet);
+  color: #fff;
+  box-shadow: 0 0 14px var(--violet-glow);
+}
+.q-bubble.answered {
+  background: rgba(16,185,129,0.15);
+  border-color: var(--green);
+  color: var(--green);
+}
+.timer-wrap {
+  display: flex; align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  padding: 7px 16px;
+}
+.timer-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 16px; font-weight: 700;
+  color: var(--cyan);
+  transition: color 0.3s;
+}
+.timer-val.urgent {
+  color: var(--red);
+  animation: pulse 0.8s infinite;
+}
+.q-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 32px;
+  margin-bottom: 20px;
+}
+.q-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.q-num { font-family: 'Orbitron', monospace; font-size: 12px; color: var(--text-faint); font-weight: 700; }
+.q-progress-bar { flex: 1; height: 4px; background: var(--surface3); border-radius: 100px; overflow: hidden; }
+.q-progress-fill { height: 100%; background: linear-gradient(90deg, var(--violet), var(--cyan)); border-radius: 100px; transition: width 0.4s ease; }
+.q-text { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; line-height: 1.45; margin-bottom: 28px; color: var(--text); }
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.option {
+  background: var(--surface2);
+  border: 1.5px solid var(--border2);
+  border-radius: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px; font-weight: 500;
+  color: var(--text);
+  display: flex; align-items: center; gap: 12px;
+  text-align: left;
+}
+.option:hover { border-color: var(--violet-light); background: rgba(124,92,252,0.08); color: var(--text); transform: translateY(-1px); }
+.option.selected { border-color: var(--violet); background: rgba(124,92,252,0.15); color: var(--violet-light); }
+.option.correct { border-color: var(--green); background: rgba(16,185,129,0.12); color: var(--green); }
+.option.wrong { border-color: var(--red); background: rgba(239,68,68,0.12); color: var(--red); }
+.opt-key {
+  width: 28px; height: 28px; flex-shrink: 0;
+  border-radius: 7px;
+  background: var(--surface3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+}
+.option.selected .opt-key { background: var(--violet); color: #fff; }
+.option.correct .opt-key { background: var(--green); color: #fff; }
+.option.wrong .opt-key { background: var(--red); color: #fff; }
+.quiz-footer { display: flex; align-items: center; justify-content: space-between; }
+
+/* MULTIPLAYER */
+.mp-wrap { max-width: 900px; margin: 0 auto; }
+.room-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.room-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+}
+.room-card:hover { border-color: rgba(34,211,238,0.3); transform: translateY(-2px); }
+.room-card.featured { border-color: rgba(244,114,182,0.3); }
+.room-live-dot {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 600; color: var(--green);
+  margin-bottom: 10px;
+}
+.live-pulse {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1s infinite;
+}
+.room-name { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.room-meta { display: flex; align-items: center; gap: 12px; font-size: 12.5px; color: var(--text-muted); margin-bottom: 14px; }
+.room-players { display: flex; margin-bottom: 14px; }
+.room-player-av {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid var(--bg2);
+  margin-right: -8px;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* LOBBY */
+.lobby-wrap {
+  max-width: 700px; margin: 0 auto;
+  animation: fadeUp 0.5s ease;
+}
+.lobby-header {
+  text-align: center; padding: 30px 0 24px;
+}
+.room-code {
+  font-family: 'Orbitron', monospace;
+  font-size: 36px; font-weight: 900;
+  letter-spacing: 0.2em;
+  background: linear-gradient(135deg, var(--violet-light), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+.lobby-players { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.lobby-player {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 12px;
+  text-align: center;
+  transition: all 0.3s;
+}
+.lobby-player.ready { border-color: var(--green); background: rgba(16,185,129,0.06); }
+.lobby-player.waiting { border-color: var(--border2); }
+.lp-av {
+  width: 44px; height: 44px; border-radius: 12px;
+  margin: 0 auto 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: #fff;
+}
+.lp-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.lp-status { font-size: 11.5px; }
+.ready-text { color: var(--green); font-weight: 600; }
+.waiting-text { color: var(--text-muted); animation: pulse 2s infinite; }
+
+/* LIVE MULTIPLAYER QUIZ */
+.mp-quiz-wrap { max-width: 860px; margin: 0 auto; animation: fadeUp 0.4s ease; }
+.mp-scores-sidebar {
+  display: grid; grid-template-columns: 1fr 280px; gap: 20px;
+}
+.live-scores { display: flex; flex-direction: column; gap: 8px; }
+.live-score-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: all 0.3s;
+}
+.live-score-row.leader { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.05); }
+.lsr-rank {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px; font-weight: 700; color: var(--text-muted);
+  width: 24px;
+}
+.lsr-rank.gold { color: var(--orange); }
+.lsr-av {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+.lsr-name { flex: 1; font-size: 13.5px; font-weight: 600; }
+.lsr-score {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px; font-weight: 700; color: var(--cyan);
+}
+.lsr-progress-wrap { width: 70px; height: 5px; background: var(--surface3); border-radius: 100px; overflow: hidden; }
+.lsr-progress-fill { height: 100%; background: linear-gradient(90deg, var(--violet), var(--cyan)); border-radius: 100px; transition: width 0.5s ease; }
+.thinking-indicator { display: flex; gap: 4px; align-items: center; }
+.thinking-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--text-muted);
+  animation: typing 1s infinite;
+}
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* RESULT PAGE */
+.result-wrap { max-width: 680px; margin: 0 auto; text-align: center; animation: fadeUp 0.5s ease; }
+.result-trophy { font-size: 60px; display: block; margin-bottom: 20px; animation: float 2s ease-in-out infinite; }
+.result-score {
+  font-family: 'Orbitron', monospace;
+  font-size: 64px; font-weight: 900;
+  background: linear-gradient(135deg, var(--orange), var(--pink));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+.result-label { font-size: 18px; color: var(--text-muted); margin-bottom: 32px; }
+.result-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 32px; }
+.rs-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 14px;
+}
+.rs-val { font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 700; margin-bottom: 5px; }
+.rs-label { font-size: 12px; color: var(--text-muted); }
+.xp-gained {
+  background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(244,114,182,0.1));
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+}
+.xp-gained-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 28px; font-weight: 900; color: var(--orange);
+}
+
+/* LEADERBOARD */
+.lb-table { width: 100%; }
+.lb-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 16px; border-radius: 10px;
+  transition: background 0.18s;
+  margin-bottom: 4px;
+  animation: slideIn 0.3s ease both;
+}
+.lb-row:hover { background: var(--surface2); }
+.lb-row.top3 { background: var(--surface); border: 1px solid var(--border); }
+.lb-rank-num {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px; font-weight: 700;
+  width: 30px; text-align: center;
+  flex-shrink: 0;
+}
+.rank-1 { color: #fbbf24; font-size: 18px; }
+.rank-2 { color: #9ca3af; font-size: 16px; }
+.rank-3 { color: #d97706; font-size: 15px; }
+.lb-av {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+.lb-info { flex: 1; }
+.lb-name { font-size: 14px; font-weight: 600; }
+.lb-sub { font-size: 12px; color: var(--text-muted); }
+.lb-score { font-family: 'Orbitron', monospace; font-size: 15px; font-weight: 700; color: var(--cyan); flex-shrink: 0; }
+.lb-xp { font-size: 12px; color: var(--orange); flex-shrink: 0; }
+
+/* PROFILE */
+.profile-wrap { max-width: 860px; margin: 0 auto; }
+.profile-hero {
+  background: linear-gradient(135deg, var(--surface), #0d1433);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 32px;
+  margin-bottom: 24px;
+  display: flex; align-items: center; gap: 28px;
+  position: relative; overflow: hidden;
+}
+.profile-hero::before {
+  content: '';
+  position: absolute;
+  width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,92,252,0.1), transparent 70%);
+  right: -80px; top: -80px;
+}
+.profile-avatar {
+  width: 80px; height: 80px; border-radius: 18px;
+  background: linear-gradient(135deg, var(--violet), var(--cyan));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', monospace;
+  font-size: 28px; font-weight: 700; color: #fff;
+  box-shadow: 0 0 30px var(--violet-glow);
+  flex-shrink: 0;
+}
+.profile-info { flex: 1; position: relative; z-index: 1; }
+.profile-name { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+.profile-level { font-size: 13px; color: var(--violet-light); margin-bottom: 12px; }
+.profile-xp-bar { height: 8px; background: var(--surface3); border-radius: 100px; overflow: hidden; max-width: 280px; }
+.profile-xp-fill { height: 100%; background: linear-gradient(90deg, var(--violet), var(--cyan)); border-radius: 100px; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .dash-layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .auth-wrap { grid-template-columns: 1fr; }
+  .auth-left { display: none; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .options-grid { grid-template-columns: 1fr; }
+  .room-grid { grid-template-columns: 1fr; }
+  .mp-scores-sidebar { grid-template-columns: 1fr; }
+  .features-grid { padding: 0 20px 60px; }
+  .hero { padding: 60px 20px 50px; }
+  .hero-stat { padding: 0 20px; }
+}
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 480px; width: 100%;
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.3s ease;
+}
+.modal-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+.modal-sub { font-size: 13.5px; color: var(--text-muted); margin-bottom: 24px; }
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+.divider-text {
+  text-align: center; position: relative; margin: 20px 0;
+  font-size: 12px; color: var(--text-faint); font-weight: 600;
+}
+.divider-text::before, .divider-text::after {
+  content: ''; position: absolute; top: 50%;
+  width: 40%; height: 1px; background: var(--border);
+}
+.divider-text::before { left: 0; }
+.divider-text::after { right: 0; }
+
+/* UTILS */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-10 { gap: 10px; }
+.gap-14 { gap: 14px; }
+.gap-20 { gap: 20px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.mb-4 { margin-bottom: 4px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-24 { margin-bottom: 24px; }
+.mt-20 { margin-top: 20px; }
+.text-sm { font-size: 12.5px; color: var(--text-muted); }
+.text-center { text-align: center; }
+.font-bold { font-weight: 700; }
+.w-full { width: 100%; }
+.relative { position: relative; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ══════════════════════════════
+   DATA & CONSTANTS
+══════════════════════════════ */
+const SUBJECTS = [
+  { id: 'math', name: 'Mathematics', icon: '📐', color: '#7c5cfc', questions: 120, progress: 68, diff: 'Hard' },
+  { id: 'sci', name: 'Science', icon: '🔬', color: '#22d3ee', questions: 98, progress: 45, diff: 'Medium' },
+  { id: 'eng', name: 'English', icon: '📚', color: '#f472b6', questions: 85, progress: 72, diff: 'Easy' },
+  { id: 'hist', name: 'History', icon: '🏛️', color: '#f59e0b', questions: 76, progress: 30, diff: 'Medium' },
+  { id: 'geo', name: 'Geography', icon: '🌍', color: '#10b981', questions: 64, progress: 55, diff: 'Easy' },
+  { id: 'cs', name: 'Computer Sci', icon: '💻', color: '#a78bfa', questions: 110, progress: 82, diff: 'Hard' },
+  { id: 'chem', name: 'Chemistry', icon: '⚗️', color: '#fb7185', questions: 92, progress: 20, diff: 'Hard' },
+  { id: 'bio', name: 'Biology', icon: '🧬', color: '#34d399', questions: 88, progress: 60, diff: 'Medium' },
+];
+
+const QUIZ_QUESTIONS = [
+  {
+    q: "What is the time complexity of binary search?",
+    opts: ["O(n)", "O(log n)", "O(n²)", "O(1)"],
+    ans: 1, exp: "Binary search halves the search space each iteration → O(log n)"
+  },
+  {
+    q: "Which planet is known as the Red Planet?",
+    opts: ["Venus", "Jupiter", "Mars", "Saturn"],
+    ans: 2, exp: "Mars appears red due to iron oxide (rust) on its surface"
+  },
+  {
+    q: "What does HTML stand for?",
+    opts: ["Hyper Text Markup Language", "High Tech Modern Language", "Hyper Transfer Markup Logic", "None of these"],
+    ans: 0, exp: "HTML = HyperText Markup Language, the backbone of web pages"
+  },
+  {
+    q: "The speed of light is approximately:",
+    opts: ["3 × 10⁶ m/s", "3 × 10⁸ m/s", "3 × 10¹⁰ m/s", "3 × 10⁴ m/s"],
+    ans: 1, exp: "c ≈ 3 × 10⁸ metres per second in vacuum"
+  },
+  {
+    q: "Who wrote 'Romeo and Juliet'?",
+    opts: ["Charles Dickens", "Jane Austen", "William Shakespeare", "Leo Tolstoy"],
+    ans: 2, exp: "Shakespeare wrote Romeo and Juliet around 1594–1596"
+  },
+];
+
+const LEADERBOARD = [
+  { name: 'Arjun Sharma', score: 9840, xp: 12400, avatar: '#7c5cfc', init: 'AS', quizzes: 48, streak: 12 },
+  { name: 'Priya Patel', score: 9120, xp: 11200, avatar: '#f472b6', init: 'PP', quizzes: 41, streak: 8 },
+  { name: 'Rohit Kumar', score: 8760, xp: 10800, avatar: '#22d3ee', init: 'RK', quizzes: 39, streak: 15 },
+  { name: 'Sneha Gupta', score: 8340, xp: 9900, avatar: '#10b981', init: 'SG', quizzes: 36, streak: 5 },
+  { name: 'Vikram Singh', score: 7980, xp: 9200, avatar: '#f59e0b', init: 'VS', quizzes: 33, streak: 7 },
+  { name: 'Ananya Roy', score: 7640, xp: 8700, avatar: '#a78bfa', init: 'AR', quizzes: 30, streak: 4 },
+  { name: 'Karan Mehta', score: 7200, xp: 8100, avatar: '#fb7185', init: 'KM', quizzes: 28, streak: 6 },
+];
+
+const ROOMS = [
+  { id: 'R001', name: 'Science Showdown', subject: 'Science', host: 'Arjun', players: 3, maxPlayers: 6, live: true, diff: 'Medium' },
+  { id: 'R002', name: 'Math Masters', subject: 'Mathematics', host: 'Priya', players: 5, maxPlayers: 6, live: true, diff: 'Hard' },
+  { id: 'R003', name: 'General Knowledge', subject: 'Mixed', host: 'Rohit', players: 2, maxPlayers: 8, live: false, diff: 'Easy' },
+  { id: 'R004', name: 'CS Quiz Battle', subject: 'Computer Sci', host: 'Sneha', players: 4, maxPlayers: 6, live: true, diff: 'Hard' },
+];
+
+const MP_PLAYERS = [
+  { name: 'Arjun S.', score: 240, av: '#7c5cfc', init: 'AS', thinking: false },
+  { name: 'You', score: 180, av: '#22d3ee', init: 'YO', thinking: false, isYou: true },
+  { name: 'Priya P.', score: 160, av: '#f472b6', init: 'PP', thinking: true },
+  { name: 'Rohit K.', score: 120, av: '#10b981', init: 'RK', thinking: false },
+];
+
+const avatarColors = ['#7c5cfc','#22d3ee','#f472b6','#10b981','#f59e0b','#a78bfa','#fb7185','#34d399'];
+
+/* ══════════════════════════════
+   TOAST SYSTEM
+══════════════════════════════ */
+function ToastContainer({ toasts }) {
+  return (
+    <div className="toast-container">
+      {toasts.map(t => (
+        <div key={t.id} className={`toast toast-${t.type || 'info'}`}>
+          <span>{t.icon}</span> {t.msg}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   NAV
+══════════════════════════════ */
+function Nav({ page, setPage, user, loggedIn }) {
+  return (
+    <nav className="nav">
+      <div className="brand" onClick={() => setPage(loggedIn ? 'dashboard' : 'landing')}>
+        <div className="brand-icon">⚡</div>
+        EduQuiz
+      </div>
+      {loggedIn && (
+        <div className="nav-center">
+          {[['dashboard','🏠 Dashboard'],['quiz','📝 Quizzes'],['multiplayer','⚔️ Multiplayer'],['leaderboard','🏆 Leaderboard']].map(([id, label]) => (
+            <button key={id} className={`nav-btn ${page === id ? 'active' : ''}`} onClick={() => setPage(id)}>{label}</button>
+          ))}
+        </div>
+      )}
+      <div className="nav-right">
+        {loggedIn ? (
+          <>
+            <div className="xp-badge">⚡ {user.xp.toLocaleString()} XP</div>
+            <div className="user-chip" onClick={() => setPage('profile')}>
+              <div className="user-avatar">{user.name[0]}</div>
+              {user.name.split(' ')[0]}
+            </div>
+          </>
+        ) : (
+          <>
+            <button className="btn btn-outline btn-sm" onClick={() => setPage('auth')}>Login</button>
+            <button className="btn btn-primary btn-sm" onClick={() => setPage('auth')}>Sign Up</button>
+          </>
+        )}
+      </div>
+    </nav>
+  );
+}
+
+/* ══════════════════════════════
+   LANDING PAGE - NEW DESIGN
+══════════════════════════════ */
+function LandingPage({ setPage }) {
+  const features = [
+    { icon:'⚡', title:'Instant Results', desc:'Get detailed performance analytics immediately after every quiz session', cls:'feat-1' },
+    { icon:'⚔️', title:'Multiplayer Rooms', desc:'Challenge friends in real-time quiz battles with up to 8 players per room', cls:'feat-2' },
+    { icon:'📊', title:'Smart Dashboard', desc:'Track your progress across all subjects with beautiful visual analytics', cls:'feat-3' },
+    { icon:'🏆', title:'Live Leaderboard', desc:'Compete globally and climb the ranks to prove your knowledge', cls:'feat-4' },
+    { icon:'🎯', title:'Subject Quizzes', desc:'Explore 8+ subjects from Math to Computer Science with curated questions', cls:'feat-5' },
+    { icon:'🔥', title:'Streak System', desc:'Build daily streaks and earn XP rewards to level up your profile', cls:'feat-6' },
+  ];
+
+  // Generate floating particles
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    size: Math.random() * 6 + 2,
+    left: Math.random() * 100,
+    delay: Math.random() * 10,
+    duration: Math.random() * 10 + 10,
+    color: ['#7c5cfc', '#22d3ee', '#f472b6', '#f59e0b'][Math.floor(Math.random() * 4)]
+  }));
+
+  return (
+    <div className="landing">
+      {/* Animated background particles */}
+      <div className="landing-bg">
+        {particles.map(p => (
+          <div key={p.id} className="particle" style={{
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            left: `${p.left}%`,
+            background: p.color,
+            animationDelay: `${p.delay}s`,
+            animationDuration: `${p.duration}s`
+          }} />
+        ))}
+      </div>
+
+      {/* Hero Section */}
+      <div className="hero">
+        <div className="hero-orbs">
+          <div className="hero-orb"></div>
+          <div className="hero-orb"></div>
+          <div className="hero-orb"></div>
+        </div>
+
+        <div className="hero-eyebrow">
+          <span>🚀</span>
+          <span>New: Real-time Multiplayer Quiz Rooms</span>
+        </div>
+
+        <h1>
+          <span className="line-1">Learn Faster, Compete Smarter</span>
+          <span className="line-2">Win Together</span>
+        </h1>
+
+        <p className="hero-sub">
+          The ultimate quiz platform for students. Master every subject with AI-powered quizzes, real-time multiplayer battles, and instant performance tracking.
+        </p>
+
+        <div className="hero-btns">
+          <button className="btn btn-primary btn-xl" onClick={() => setPage('auth')}>
+            Start Learning Free
+            <span style={{marginLeft:4}}>⚡</span>
+          </button>
+          <button className="btn btn-outline btn-xl" onClick={() => setPage('multiplayer')}>
+            Join a Live Room
+            <span style={{marginLeft:4}}>⚔️</span>
+          </button>
+        </div>
+
+        <div className="hero-stats">
+          {[['50K+','Students'],['200K+','Quizzes Taken'],['8+','Subjects'],['98%','Satisfaction']].map(([val, label]) => (
+            <div className="hero-stat" key={label}>
+              <span className="hs-val">{val}</span>
+              <span className="hs-label">{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div className="features-section">
+        <div className="section-header">
+          <h2>Why Choose EduQuiz?</h2>
+          <p>Everything you need to master any subject and compete with friends</p>
+        </div>
+
+        <div className="features-grid">
+          {features.map((f, i) => (
+            <div className={`feat ${f.cls}`} key={i}>
+              <div className="feat-icon-wrap">{f.icon}</div>
+              <h3>{f.title}</h3>
+              <p>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="cta-section">
+        <div className="cta-card">
+          <h2>Ready to Start Your Learning Journey?</h2>
+          <p>Join thousands of students who are already learning, competing, and winning together on EduQuiz Arena.</p>
+          <button className="btn btn-primary btn-xl" onClick={() => setPage('auth')}>
+            Get Started Free →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   AUTH PAGE
+══════════════════════════════ */
+function AuthPage({ setPage, setUser, addToast }) {
+  const [tab, setTab] = useState('login');
+  const [form, setForm] = useState({ name:'', email:'', password:'', confirm:'' });
+  const [loading, setLoading] = useState(false);
+
+  const handle = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setUser({ name: form.name || 'Rahul Verma', email: form.email || 'rahul@edu.com', xp: 3240, level: 12, streak: 7 });
+      addToast({ msg: tab === 'login' ? 'Welcome back! 🎉' : 'Account created! 🚀', type: 'success', icon: '✅' });
+      setPage('dashboard');
+    }, 1200);
+  };
+
+  return (
+    <div className="auth-page">
+      <div className="auth-wrap">
+        <div className="auth-left">
+          <div className="auth-brand">⚡ EduQuiz Arena</div>
+          <h2>Master every subject, one quiz at a time</h2>
+          <p>Join 50,000+ students competing and learning together</p>
+          {['Subject-wise curated quizzes','Real-time multiplayer battles','XP & streak reward system','Detailed performance analytics'].map(c => (
+            <div className="auth-check" key={c}><span className="auth-check-ico">✓</span> {c}</div>
+          ))}
+        </div>
+        <div className="auth-right">
+          <div className="auth-tabs">
+            <button className={`auth-tab ${tab === 'login' ? 'active' : ''}`} onClick={() => setTab('login')}>Login</button>
+            <button className={`auth-tab ${tab === 'signup' ? 'active' : ''}`} onClick={() => setTab('signup')}>Sign Up</button>
+          </div>
+          <form onSubmit={handle}>
+            {tab === 'signup' && (
+              <div className="form-group">
+                <label className="label">Full Name</label>
+                <input className="input" placeholder="Rahul Verma" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
+              </div>
+            )}
+            <div className="form-group">
+              <label className="label">Email</label>
+              <input className="input" type="email" placeholder="you@school.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+            </div>
+            <div className="form-group">
+              <label className="label">Password</label>
+              <input className="input" type="password" placeholder="••••••••" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
+            </div>
+            {tab === 'signup' && (
+              <div className="form-group">
+                <label className="label">Confirm Password</label>
+                <input className="input" type="password" placeholder="••••••••" value={form.confirm} onChange={e => setForm({...form, confirm: e.target.value})} required />
+              </div>
+            )}
+            <button className="btn btn-primary w-full" type="submit" style={{justifyContent:'center'}} disabled={loading}>
+              {loading ? '⏳ Please wait...' : (tab === 'login' ? '🚀 Login' : '✨ Create Account')}
+            </button>
+          </form>
+          <div className="divider-text" style={{marginTop: 20}}>OR</div>
+          <button className="btn btn-ghost w-full" style={{justifyContent:'center', marginTop: 0}} onClick={() => {
+            setUser({ name: 'Demo User', email: 'demo@edu.com', xp: 3240, level: 12, streak: 7 });
+            addToast({ msg: 'Demo mode active! 👋', type: 'info', icon: '👁️' });
+            setPage('dashboard');
+          }}>👁️ Continue as Guest</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   SIDEBAR
+══════════════════════════════ */
+function Sidebar({ page, setPage, user }) {
+  const links = [
+    { id: 'dashboard', icon: '🏠', label: 'Dashboard' },
+    { id: 'quiz', icon: '📝', label: 'Take Quiz' },
+    { id: 'multiplayer', icon: '⚔️', label: 'Multiplayer', badge: 3 },
+    { id: 'leaderboard', icon: '🏆', label: 'Leaderboard' },
+    { id: 'profile', icon: '👤', label: 'My Profile' },
+    { id: 'history', icon: '📋', label: 'History' },
+    { id: 'landing', icon: '🚪', label: 'Logout' },
+  ];
+  const pct = ((user.xp % 1000) / 1000) * 100;
+  return (
+    <div className="sidebar">
+      <div className="sb-user">
+        <div className="sb-avatar">{user.name[0]}</div>
+        <div className="sb-name">{user.name}</div>
+        <div className="sb-xp">⚡ {user.xp.toLocaleString()} XP · Level {user.level}</div>
+        <div className="sb-xp-bar"><div className="sb-xp-fill" style={{width: `${pct}%`}} /></div>
+      </div>
+      <div className="sb-nav">
+        <div className="sb-section">Menu</div>
+        {links.map(l => (
+          <button key={l.id} className={`sb-link ${page === l.id ? 'active' : ''}`} onClick={() => setPage(l.id)}>
+            <span className="ico">{l.icon}</span>
+            {l.label}
+            {l.badge && <span className="badge-count">{l.badge}</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   DASHBOARD
+══════════════════════════════ */
+function Dashboard({ setPage, setSelectedSubject, user }) {
+  const stats = [
+    { icon:'⚡', val: user.xp.toLocaleString(), label:'Total XP', delta:'+240 today', up:true, cls:'stat-violet' },
+    { icon:'🎯', val:'78%', label:'Accuracy', delta:'+3% this week', up:true, cls:'stat-cyan' },
+    { icon:'🔥', val:`${user.streak}`, label:'Day Streak', delta:'Keep it up!', up:true, cls:'stat-pink' },
+    { icon:'📝', val:'24', label:'Quizzes Done', delta:'+2 today', up:true, cls:'stat-green' },
+  ];
+  return (
+    <div className="main">
+      <div className="page-header">
+        <div>
+          <div className="page-title">Welcome back, {user.name.split(' ')[0]}! 👋</div>
+          <div className="page-subtitle">You have 3 pending challenges and 2 live rooms waiting</div>
+        </div>
+        <button className="btn btn-primary" onClick={() => setPage('quiz')}>Start Quiz ⚡</button>
+      </div>
+
+      <div className="stats-row">
+        {stats.map(s => (
+          <div className={`stat-card ${s.cls}`} key={s.label}>
+            <div className="stat-icon">{s.icon}</div>
+            <div className="stat-val">{s.val}</div>
+            <div className="stat-label">{s.label}</div>
+            <div className={`stat-delta ${s.up ? 'stat-up' : 'stat-down'}`}>{s.delta}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid-2 mb-24">
+        <div className="card">
+          <div className="flex items-center justify-between mb-16">
+            <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15}}>📊 Subject Progress</div>
+            <button className="btn btn-ghost btn-sm" onClick={() => setPage('quiz')}>View All</button>
+          </div>
+          {SUBJECTS.slice(0,5).map(s => (
+            <div key={s.id} className="mb-12">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-10">
+                  <span>{s.icon}</span>
+                  <span style={{fontSize:13,fontWeight:600}}>{s.name}</span>
+                </div>
+                <span className="text-sm">{s.progress}%</span>
+              </div>
+              <div className="s-progress">
+                <div className="s-progress-fill" style={{width:`${s.progress}%`,background:`linear-gradient(90deg, ${s.color}, ${s.color}88)`}} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="card">
+          <div className="flex items-center justify-between mb-16">
+            <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15}}>🔴 Live Rooms</div>
+            <button className="btn btn-cyan btn-sm" onClick={() => setPage('multiplayer')}>Join Room</button>
+          </div>
+          {ROOMS.filter(r => r.live).map(r => (
+            <div key={r.id} className="mb-12" style={{padding:'12px',background:'var(--surface2)',borderRadius:10,border:'1px solid var(--border)'}}>
+              <div className="flex items-center justify-between mb-4">
+                <div style={{fontWeight:700,fontSize:13.5}}>{r.name}</div>
+                <div className="room-live-dot"><div className="live-pulse" />{r.players}/{r.maxPlayers}</div>
+              </div>
+              <div className="flex items-center gap-10">
+                <span className={`badge badge-violet`}>{r.subject}</span>
+                <span className="text-sm">Host: {r.host}</span>
+              </div>
+            </div>
+          ))}
+          <button className="btn btn-outline w-full" style={{marginTop:8,justifyContent:'center'}} onClick={() => setPage('multiplayer')}>
+            ⚔️ View All Rooms
+          </button>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between mb-16">
+        <div style={{fontFamily:'Syne',fontWeight:700,fontSize:17}}>📚 Choose a Subject</div>
+        <span className="text-sm">8 subjects available</span>
+      </div>
+      <div className="subject-grid">
+        {SUBJECTS.map(s => (
+          <div className="subject-card" key={s.id} onClick={() => { setSelectedSubject(s); setPage('quiz'); }}>
+            <span className="s-icon">{s.icon}</span>
+            <div className="s-name">{s.name}</div>
+            <div className="s-count">{s.questions} questions</div>
+            <div className="s-diff">
+              <span className={`badge badge-${s.diff==='Hard'?'red':s.diff==='Medium'?'orange':'green'}`}>{s.diff}</span>
+            </div>
+            <div className="s-progress">
+              <div className="s-progress-fill" style={{width:`${s.progress}%`,background:`linear-gradient(90deg, ${s.color}, ${s.color}88)`}} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   QUIZ PAGE
+══════════════════════════════ */
+function QuizPage({ setPage, addToast, setUser, user, selectedSubject }) {
+  const [phase, setPhase] = useState('select'); // select | quiz | result
+  const [currentQ, setCurrentQ] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [answered, setAnswered] = useState(Array(QUIZ_QUESTIONS.length).fill(null));
+  const [timeLeft, setTimeLeft] = useState(600);
+  const [score, setScore] = useState(0);
+  const [correct, setCorrect] = useState(0);
+  const timerRef = useRef();
+  const subj = selectedSubject || SUBJECTS[2];
+
+  useEffect(() => {
+    if (phase === 'quiz') {
+      timerRef.current = setInterval(() => {
+        setTimeLeft(t => { if (t <= 1) { clearInterval(timerRef.current); finish(); return 0; } return t - 1; });
+      }, 1000);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [phase]);
+
+  const startQuiz = () => { setPhase('quiz'); setCurrentQ(0); setSelected(null); setScore(0); setCorrect(0); setAnswered(Array(QUIZ_QUESTIONS.length).fill(null)); setTimeLeft(600); };
+  const finish = () => { clearInterval(timerRef.current); setPhase('result'); const xpGained = correct * 50 + 80; setUser(u => ({...u, xp: u.xp + xpGained})); addToast({ msg: `🎓 +${xpGained} XP earned!`, type: 'success', icon: '⚡' }); };
+
+  const pickOpt = (i) => {
+    if (answered[currentQ] !== null) return;
+    setSelected(i);
+    const isRight = i === QUIZ_QUESTIONS[currentQ].ans;
+    const newAns = [...answered]; newAns[currentQ] = i; setAnswered(newAns);
+    if (isRight) { setScore(s => s + 100); setCorrect(c => c + 1); addToast({ msg: '✅ Correct! +100 pts', type: 'success', icon: '⚡' }); }
+    else { addToast({ msg: '❌ Wrong answer!', type: 'error', icon: '💡' }); }
+  };
+
+  const nextQ = () => {
+    if (currentQ < QUIZ_QUESTIONS.length - 1) { setCurrentQ(c => c + 1); setSelected(null); }
+    else finish();
+  };
+
+  const mm = String(Math.floor(timeLeft/60)).padStart(2,'0');
+  const ss = String(timeLeft%60).padStart(2,'0');
+  const q = QUIZ_QUESTIONS[currentQ];
+  const xpGained = correct * 50 + 80;
+
+  if (phase === 'select') return (
+    <div className="main">
+      <div className="page-header">
+        <div>
+          <div className="page-title">📝 Take a Quiz</div>
+          <div className="page-subtitle">Select a subject or start with your last topic</div>
+        </div>
+      </div>
+      <div className="subject-grid mb-24">
+        {SUBJECTS.map(s => (
+          <div className="subject-card" key={s.id} onClick={() => startQuiz()}>
+            <span className="s-icon">{s.icon}</span>
+            <div className="s-name">{s.name}</div>
+            <div className="s-count">{s.questions} questions</div>
+            <div className="s-diff mb-8">
+              <span className={`badge badge-${s.diff==='Hard'?'red':s.diff==='Medium'?'orange':'green'}`}>{s.diff}</span>
+            </div>
+            <button className="btn btn-primary btn-sm w-full" style={{justifyContent:'center',marginTop:8}}>Start Quiz →</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (phase === 'quiz') return (
+    <div className="main">
+      <div className="quiz-wrap">
+        <div className="quiz-header">
+          <div className="q-bubbles">
+            {QUIZ_QUESTIONS.map((_, i) => (
+              <div key={i} className={`q-bubble ${i === currentQ ? 'current' : ''} ${answered[i] !== null ? 'answered' : ''}`}>{i+1}</div>
+            ))}
+          </div>
+          <div className="timer-wrap">
+            <span>⏱</span>
+            <span className={`timer-val ${timeLeft <= 60 ? 'urgent' : ''}`}>{mm}:{ss}</span>
+          </div>
+          <span className="badge badge-violet">{subj.name}</span>
+        </div>
+
+        <div className="q-card">
+          <div className="q-meta">
+            <span className="q-num">Q{currentQ+1} of {QUIZ_QUESTIONS.length}</span>
+            <div className="q-progress-bar">
+              <div className="q-progress-fill" style={{width:`${((currentQ+1)/QUIZ_QUESTIONS.length)*100}%`}} />
+            </div>
+            <span className="badge badge-cyan">{score} pts</span>
+          </div>
+          <div className="q-text">{q.q}</div>
+          <div className="options-grid">
+            {q.opts.map((opt, i) => {
+              let cls = 'option';
+              if (answered[currentQ] !== null) {
+                if (i === q.ans) cls += ' correct';
+                else if (i === answered[currentQ] && i !== q.ans) cls += ' wrong';
+              } else if (selected === i) cls += ' selected';
+              return (
+                <div className={cls} key={i} onClick={() => pickOpt(i)}>
+                  <div className="opt-key">{['A','B','C','D'][i]}</div>
+                  {opt}
+                </div>
+              );
+            })}
+          </div>
+          {answered[currentQ] !== null && (
+            <div style={{marginTop:16,padding:'12px 16px',background:'rgba(124,92,252,0.08)',borderRadius:10,fontSize:13,color:'var(--text-muted)'}}>
+              💡 {q.exp}
+            </div>
+          )}
+        </div>
+        <div className="quiz-footer">
+          <button className="btn btn-ghost" onClick={() => setPhase('select')}>← Exit</button>
+          <button className={`btn btn-primary ${answered[currentQ] === null ? 'btn-disabled' : ''}`} onClick={nextQ}>
+            {currentQ < QUIZ_QUESTIONS.length - 1 ? 'Next →' : 'Finish 🎯'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Result
+  const pct = Math.round((correct / QUIZ_QUESTIONS.length) * 100);
+  return (
+    <div className="main">
+      <div className="result-wrap">
+        <span className="result-trophy">{pct >= 80 ? '🏆' : pct >= 60 ? '🥈' : '📚'}</span>
+        <div className="result-score">{pct}%</div>
+        <div className="result-label">{pct >= 80 ? 'Outstanding!' : pct >= 60 ? 'Good Job!' : 'Keep Practicing!'}</div>
+        <div className="result-stats">
+          {[['✅',correct,'Correct'],['❌',QUIZ_QUESTIONS.length-correct,'Wrong'],['⚡',score,'Points']].map(([ico,val,label]) => (
+            <div className="rs-card" key={label}>
+              <div className="rs-val" style={{fontSize:16}}>{ico} {val}</div>
+              <div className="rs-label">{label}</div>
+            </div>
+          ))}
+        </div>
+        <div className="xp-gained">
+          <span style={{fontSize:24}}>⚡</span>
+          <div>
+            <div className="xp-gained-val">+{xpGained} XP</div>
+            <div style={{fontSize:12.5,color:'var(--text-muted)'}}>Added to your profile</div>
+          </div>
+        </div>
+        <div className="flex gap-14" style={{justifyContent:'center'}}>
+          <button className="btn btn-primary btn-lg" onClick={startQuiz}>🔄 Try Again</button>
+          <button className="btn btn-outline btn-lg" onClick={() => setPhase('select')}>📚 New Subject</button>
+          <button className="btn btn-ghost btn-lg" onClick={() => setPage('leaderboard')}>🏆 Leaderboard</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   MULTIPLAYER PAGE
+══════════════════════════════ */
+function MultiplayerPage({ addToast }) {
+  const [view, setView] = useState('rooms'); // rooms | lobby | quiz | result
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [currentQ, setCurrentQ] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [answered, setAnswered] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(20);
+  const [score, setScore] = useState(180);
+  const [players, setPlayers] = useState(MP_PLAYERS);
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState({name:'',subject:'Math',maxPlayers:'6',diff:'Medium'});
+  const timerRef = useRef();
+
+  useEffect(() => {
+    if (view === 'quiz') {
+      timerRef.current = setInterval(() => {
+        setTimeLeft(t => { if (t <= 1) { clearInterval(timerRef.current); nextQ(); return 20; } return t - 1; });
+      }, 1000);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [view, currentQ]);
+
+  useEffect(() => {
+    if (view === 'quiz') {
+      const iv = setInterval(() => {
+        setPlayers(p => p.map(pl => !pl.isYou ? { ...pl, score: pl.score + Math.floor(Math.random() * 15), thinking: Math.random() > 0.5 } : pl));
+      }, 2000);
+      return () => clearInterval(iv);
+    }
+  }, [view]);
+
+  const joinRoom = (r) => { setSelectedRoom(r); setView('lobby'); addToast({ msg: `Joined room: ${r.name}!`, type: 'success', icon: '⚔️' }); };
+  const startLobby = () => { setView('quiz'); setCurrentQ(0); setSelected(null); setAnswered([]); setTimeLeft(20); setScore(180); };
+  const nextQ = () => {
+    clearInterval(timerRef.current);
+    if (currentQ < QUIZ_QUESTIONS.length - 1) { setCurrentQ(c => c+1); setSelected(null); setTimeLeft(20); }
+    else { setView('result'); }
+  };
+  const pickOpt = (i) => {
+    if (answered.includes(currentQ)) return;
+    setSelected(i); setAnswered(a => [...a, currentQ]);
+    if (i === QUIZ_QUESTIONS[currentQ].ans) { setScore(s => s + 100); setPlayers(p => p.map(pl => pl.isYou ? {...pl, score: pl.score + 100} : pl)); addToast({ msg: '⚡ Correct! +100 pts', type: 'success', icon: '⚡' }); }
+    else addToast({ msg: '❌ Wrong!', type: 'error', icon: '💡' });
+  };
+
+  const sortedPlayers = [...players].sort((a,b) => b.score - a.score);
+  const q = QUIZ_QUESTIONS[currentQ];
+  const timerPct = (timeLeft / 20) * 100;
+
+  if (view === 'rooms') return (
+    <div className="main">
+      <div className="mp-wrap">
+        <div className="page-header">
+          <div>
+            <div className="page-title">⚔️ Multiplayer Rooms</div>
+            <div className="page-subtitle">{ROOMS.filter(r=>r.live).length} live rooms • Challenge friends in real-time</div>
+          </div>
+          <button className="btn btn-pink" onClick={() => setShowCreate(true)}>+ Create Room</button>
+        </div>
+
+        <div className="room-grid">
+          {ROOMS.map(r => (
+            <div className={`room-card ${r.live ? 'featured' : ''}`} key={r.id}>
+              {r.live && <div className="room-live-dot"><div className="live-pulse" />LIVE</div>}
+              <div className="room-name">{r.name}</div>
+              <div className="room-meta">
+                <span>📚 {r.subject}</span>
+                <span>👥 {r.players}/{r.maxPlayers}</span>
+                <span className={`badge badge-${r.diff==='Hard'?'red':r.diff==='Medium'?'orange':'green'}`}>{r.diff}</span>
+              </div>
+              <div className="room-players">
+                {Array(r.players).fill(0).map((_,i) => (
+                  <div key={i} className="room-player-av" style={{background: avatarColors[i % avatarColors.length], fontSize:11,fontWeight:700,color:'#fff'}}>
+                    {String.fromCharCode(65+i)}
+                  </div>
+                ))}
+              </div>
+              <button className={`btn btn-sm w-full ${r.live ? 'btn-cyan' : 'btn-outline'}`} style={{justifyContent:'center'}} onClick={() => joinRoom(r)}>
+                {r.live ? '⚡ Join Now' : '👁 Spectate'}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="card">
+          <div className="flex items-center justify-between mb-16">
+            <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15}}>🎯 Quick Match</div>
+            <span className="badge badge-green">Auto-find</span>
+          </div>
+          <p style={{fontSize:13.5,color:'var(--text-muted)',marginBottom:16}}>Get matched instantly with players of similar skill level across any subject.</p>
+          <div className="grid-2">
+            <select className="input">
+              {SUBJECTS.map(s => <option key={s.id}>{s.name}</option>)}
+            </select>
+            <select className="input">
+              <option>Easy</option><option>Medium</option><option>Hard</option>
+            </select>
+          </div>
+          <button className="btn btn-primary btn-lg w-full" style={{justifyContent:'center',marginTop:16}} onClick={() => joinRoom(ROOMS[0])}>
+            ⚡ Find Match
+          </button>
+        </div>
+      </div>
+
+      {showCreate && (
+        <div className="modal-overlay" onClick={() => setShowCreate(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-title">🏗️ Create a Room</div>
+            <div className="modal-sub">Set up a custom quiz room for your friends</div>
+            <div className="form-group">
+              <label className="label">Room Name</label>
+              <input className="input" placeholder="My Quiz Room" value={createForm.name} onChange={e => setCreateForm({...createForm,name:e.target.value})} />
+            </div>
+            <div className="grid-2">
+              <div className="form-group">
+                <label className="label">Subject</label>
+                <select className="input" value={createForm.subject} onChange={e => setCreateForm({...createForm,subject:e.target.value})}>
+                  {SUBJECTS.map(s => <option key={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="label">Difficulty</label>
+                <select className="input" value={createForm.diff} onChange={e => setCreateForm({...createForm,diff:e.target.value})}>
+                  <option>Easy</option><option>Medium</option><option>Hard</option>
+                </select>
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="label">Max Players</label>
+              <select className="input" value={createForm.maxPlayers} onChange={e => setCreateForm({...createForm,maxPlayers:e.target.value})}>
+                {[2,4,6,8].map(n => <option key={n}>{n}</option>)}
+              </select>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-ghost" onClick={() => setShowCreate(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={() => { setShowCreate(false); joinRoom({id:'NEW', name: createForm.name || 'My Room', subject: createForm.subject, host:'You', players:1, maxPlayers: parseInt(createForm.maxPlayers), live:false}); }}>
+                🚀 Create & Join
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  if (view === 'lobby') return (
+    <div className="main">
+      <div className="lobby-wrap">
+        <div className="lobby-header">
+          <div className="badge badge-cyan mb-12">🏠 Room Lobby</div>
+          <div style={{fontFamily:'Syne',fontWeight:700,fontSize:20,marginBottom:8}}>{selectedRoom?.name}</div>
+          <div style={{fontSize:13,color:'var(--text-muted)',marginBottom:20}}>Share this code with friends to invite them</div>
+          <div className="room-code">{selectedRoom?.id || 'QUIZ1'}</div>
+          <div className="text-sm mt-20">Waiting for players... ({selectedRoom?.players || 1}/{selectedRoom?.maxPlayers || 6})</div>
+        </div>
+
+        <div className="lobby-players">
+          {[{n:'Arjun S.',ready:true,c:'#7c5cfc'},{n:'You',ready:false,c:'#22d3ee',you:true},{n:'Priya P.',ready:true,c:'#f472b6'},{n:'Waiting...',ready:false,c:'#3a4560',empty:true}].map((p,i) => (
+            <div className={`lobby-player ${p.ready ? 'ready' : 'waiting'}`} key={i}>
+              <div className="lp-av" style={{background: p.empty ? 'var(--surface3)' : p.c}}>{p.empty ? '?' : p.n[0]}</div>
+              <div className="lp-name">{p.n}</div>
+              <div className="lp-status">
+                {p.empty ? <span className="waiting-text">Empty slot</span> :
+                 p.ready ? <span className="ready-text">✓ Ready</span> :
+                 <span className="waiting-text">⏳ Waiting</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-14" style={{justifyContent:'center'}}>
+          <button className="btn btn-ghost" onClick={() => setView('rooms')}>← Leave</button>
+          <button className="btn btn-primary btn-lg" onClick={startLobby}>⚡ Start Quiz Now</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (view === 'quiz') return (
+    <div className="main">
+      <div className="mp-quiz-wrap">
+        <div className="flex items-center justify-between mb-20">
+          <div className="page-title">⚔️ {selectedRoom?.name}</div>
+          <div className="flex gap-10 items-center">
+            <div style={{fontFamily:'Orbitron',fontSize:20,fontWeight:700,color: timeLeft <= 5 ? 'var(--red)' : 'var(--cyan)', animation: timeLeft <= 5 ? 'pulse 0.5s infinite' : 'none'}}>
+              {String(timeLeft).padStart(2,'0')}s
+            </div>
+            <div style={{width:80,height:6,background:'var(--surface3)',borderRadius:100,overflow:'hidden'}}>
+              <div style={{height:'100%',width:`${timerPct}%`,background:`linear-gradient(90deg, ${timeLeft <= 5 ? 'var(--red)' : 'var(--cyan)'}, var(--violet))`,borderRadius:100,transition:'width 1s linear'}} />
+            </div>
+          </div>
+        </div>
+
+        <div className="mp-scores-sidebar">
+          <div>
+            <div className="q-card">
+              <div className="q-meta">
+                <span className="q-num">Q{currentQ+1}/{QUIZ_QUESTIONS.length}</span>
+                <div className="q-progress-bar"><div className="q-progress-fill" style={{width:`${((currentQ+1)/QUIZ_QUESTIONS.length)*100}%`}} /></div>
+                <span className="badge badge-cyan">{score} pts</span>
+              </div>
+              <div className="q-text">{q.q}</div>
+              <div className="options-grid">
+                {q.opts.map((opt, i) => {
+                  let cls = 'option';
+                  if (answered.includes(currentQ)) { if (i === q.ans) cls += ' correct'; else if (i === selected) cls += ' wrong'; }
+                  else if (selected === i) cls += ' selected';
+                  return (
+                    <div className={cls} key={i} onClick={() => pickOpt(i)}>
+                      <div className="opt-key">{['A','B','C','D'][i]}</div>
+                      {opt}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            {answered.includes(currentQ) && (
+              <div style={{textAlign:'right',marginTop:12}}>
+                <button className="btn btn-primary" onClick={nextQ}>
+                  {currentQ < QUIZ_QUESTIONS.length - 1 ? 'Next →' : 'Finish 🎯'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div style={{fontFamily:'Syne',fontWeight:700,fontSize:14,marginBottom:12}}>🏆 Live Scores</div>
+            <div className="live-scores">
+              {sortedPlayers.map((p, i) => (
+                <div className={`live-score-row ${i === 0 ? 'leader' : ''}`} key={p.name}>
+                  <div className={`lsr-rank ${i === 0 ? 'gold' : ''}`}>{i === 0 ? '👑' : `#${i+1}`}</div>
+                  <div className="lsr-av" style={{background: p.av}}>{p.init}</div>
+                  <div className="lsr-name">{p.isYou ? <b>You</b> : p.name}</div>
+                  {p.thinking && !p.isYou ? (
+                    <div className="thinking-indicator">
+                      <div className="thinking-dot"/><div className="thinking-dot"/><div className="thinking-dot"/>
+                    </div>
+                  ) : null}
+                  <div className="lsr-score">{p.score}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // MP Result
+  const myRank = sortedPlayers.findIndex(p => p.isYou) + 1;
+  return (
+    <div className="main">
+      <div className="result-wrap">
+        <span className="result-trophy">{myRank === 1 ? '🏆' : myRank === 2 ? '🥈' : myRank === 3 ? '🥉' : '🎮'}</span>
+        <div style={{fontFamily:'Syne',fontWeight:800,fontSize:26,marginBottom:8}}>
+          {myRank === 1 ? 'You Won! 🎉' : `Ranked #${myRank}`}
+        </div>
+        <div className="result-score">{score}</div>
+        <div className="result-label">Final Score</div>
+        <div style={{marginBottom:24}}>
+          {sortedPlayers.map((p,i) => (
+            <div className={`live-score-row ${p.isYou ? 'leader' : ''}`} key={p.name} style={{marginBottom:8}}>
+              <div className={`lsr-rank ${i===0?'gold':''}`}>{['🥇','🥈','🥉','4️⃣'][i]}</div>
+              <div className="lsr-av" style={{background:p.av}}>{p.init}</div>
+              <div className="lsr-name" style={{flex:1}}>{p.isYou ? <b>You</b> : p.name}</div>
+              <div className="lsr-score">{p.score} pts</div>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-14" style={{justifyContent:'center'}}>
+          <button className="btn btn-primary btn-lg" onClick={() => { setView('lobby'); setCurrentQ(0); setSelected(null); setAnswered([]); }}>🔄 Rematch</button>
+          <button className="btn btn-outline btn-lg" onClick={() => setView('rooms')}>🏠 Leave Room</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   LEADERBOARD
+══════════════════════════════ */
+function LeaderboardPage() {
+  const [tab, setTab] = useState('weekly');
+  return (
+    <div className="main">
+      <div className="page-header">
+        <div>
+          <div className="page-title">🏆 Global Leaderboard</div>
+          <div className="page-subtitle">Top performers this week • Updated live</div>
+        </div>
+        <div className="flex gap-10">
+          {['weekly','monthly','all-time'].map(t => (
+            <button key={t} className={`btn btn-sm ${tab === t ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setTab(t)}>
+              {t.replace('-',' ').replace(/\b\w/g, c => c.toUpperCase())}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid-2 mb-24">
+        {LEADERBOARD.slice(0,3).map((p,i) => (
+          <div key={p.name} className="card-glow" style={{gridColumn: i === 0 ? '1 / -1' : 'auto'}}>
+            <div className="flex items-center gap-20">
+              <div style={{fontSize: i === 0 ? 42 : 28}}>{['🥇','🥈','🥉'][i]}</div>
+              <div className="lb-av" style={{width: i===0?54:44, height: i===0?54:44, borderRadius:14, background: p.avatar, fontSize: i===0?20:16}}>{p.init}</div>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:'Syne',fontWeight:700,fontSize: i===0?18:15}}>{p.name}</div>
+                <div className="text-sm">{p.quizzes} quizzes • {p.streak} day streak 🔥</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontFamily:'Orbitron',fontWeight:700,fontSize: i===0?22:18, color:'var(--cyan)'}}>{p.score.toLocaleString()}</div>
+                <div style={{fontSize:12,color:'var(--orange)'}}>⚡ {p.xp.toLocaleString()} XP</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="card">
+        <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15,marginBottom:16}}>Full Rankings</div>
+        {LEADERBOARD.map((p,i) => (
+          <div className={`lb-row ${i < 3 ? 'top3' : ''}`} key={p.name} style={{animationDelay:`${i*0.06}s`}}>
+            <div className={`lb-rank-num ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}`}>
+              {i < 3 ? ['🥇','🥈','🥉'][i] : i+1}
+            </div>
+            <div className="lb-av" style={{background: p.avatar}}>{p.init}</div>
+            <div className="lb-info">
+              <div className="lb-name">{p.name}</div>
+              <div className="lb-sub">{p.quizzes} quizzes • {p.streak}🔥</div>
+            </div>
+            <div className="lb-xp">⚡ {p.xp.toLocaleString()}</div>
+            <div className="lb-score">{p.score.toLocaleString()}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   PROFILE
+══════════════════════════════ */
+function ProfilePage({ user }) {
+  const pct = ((user.xp % 1000) / 1000) * 100;
+  const achievements = [
+    {icon:'🔥',name:'7 Day Streak',desc:'Studied 7 days in a row',got:true},
+    {icon:'⚡',name:'Speed Demon',desc:'Answered 10 in a row correctly',got:true},
+    {icon:'🏆',name:'Top 10',desc:'Reached global top 10',got:false},
+    {icon:'📚',name:'Scholar',desc:'Completed all subjects',got:false},
+    {icon:'⚔️',name:'Multiplayer Pro',desc:'Won 10 multiplayer matches',got:true},
+    {icon:'🎯',name:'Perfect Score',desc:'100% on any quiz',got:false},
+  ];
+  return (
+    <div className="main">
+      <div className="profile-wrap">
+        <div className="profile-hero">
+          <div className="profile-avatar">{user.name[0]}</div>
+          <div className="profile-info">
+            <div className="profile-name">{user.name}</div>
+            <div className="profile-level">Level {user.level} • Scholar</div>
+            <div className="flex items-center gap-10 mb-12">
+              <span className="badge badge-orange">🔥 {user.streak} day streak</span>
+              <span className="badge badge-violet">⚡ {user.xp.toLocaleString()} XP</span>
+              <span className="badge badge-cyan">📝 24 quizzes</span>
+            </div>
+            <div style={{maxWidth:280}}>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm">Level {user.level}</span>
+                <span className="text-sm">Level {user.level + 1}</span>
+              </div>
+              <div className="profile-xp-bar">
+                <div className="profile-xp-fill" style={{width:`${pct}%`}} />
+              </div>
+              <div className="text-sm mt-20">{Math.round(1000 - (user.xp % 1000))} XP to next level</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid-2 mb-24">
+          {[['📐 Best Subject','Mathematics','92% avg'],['⚡ Fastest Time','32 seconds','in CS Quiz'],['🏆 Best Rank','#3','Multiplayer'],['🎯 Accuracy','78%','all time']].map(([label,val,sub]) => (
+            <div className="stat-card stat-violet" key={label}>
+              <div className="stat-label mb-4">{label}</div>
+              <div className="stat-val">{val}</div>
+              <div className="text-sm">{sub}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="card">
+          <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15,marginBottom:18}}>🏅 Achievements</div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12}}>
+            {achievements.map(a => (
+              <div key={a.name} style={{
+                padding:'14px 16px', borderRadius:12,
+                background: a.got ? 'rgba(124,92,252,0.08)' : 'var(--surface2)',
+                border: `1px solid ${a.got ? 'rgba(124,92,252,0.25)' : 'var(--border)'}`,
+                opacity: a.got ? 1 : 0.5
+              }}>
+                <div style={{fontSize:22,marginBottom:7}}>{a.icon}</div>
+                <div style={{fontWeight:700,fontSize:13,marginBottom:3}}>{a.name}</div>
+                <div style={{fontSize:12,color:'var(--text-muted)'}}>{a.desc}</div>
+                {a.got && <div style={{fontSize:11,color:'var(--green)',marginTop:6,fontWeight:600}}>✓ Unlocked</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   HISTORY PAGE
+══════════════════════════════ */
+function HistoryPage() {
+  const history = [
+    {sub:'Computer Sci',icon:'💻',score:90,pts:450,date:'Today, 2:30 PM',time:'8:42',rank:'#2',mult:true},
+    {sub:'Mathematics',icon:'📐',score:80,pts:400,date:'Yesterday, 5:15 PM',time:'11:20',rank:null,mult:false},
+    {sub:'Science',icon:'🔬',score:70,pts:350,date:'Yesterday, 3:00 PM',time:'9:55',rank:'#4',mult:true},
+    {sub:'English',icon:'📚',score:100,pts:550,date:'2 days ago',time:'7:30',rank:null,mult:false},
+    {sub:'History',icon:'🏛️',score:60,pts:300,date:'3 days ago',time:'14:10',rank:'#5',mult:true},
+  ];
+  return (
+    <div className="main">
+      <div className="page-header">
+        <div>
+          <div className="page-title">📋 Quiz History</div>
+          <div className="page-subtitle">All your past attempts and scores</div>
+        </div>
+      </div>
+      <div className="card">
+        {history.map((h,i) => (
+          <div key={i} style={{display:'flex',alignItems:'center',gap:16,padding:'14px 0',borderBottom: i < history.length-1 ? '1px solid var(--border)' : 'none'}}>
+            <div style={{width:44,height:44,borderRadius:12,background:`linear-gradient(135deg, var(--violet), var(--cyan))`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>
+              {h.icon}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:700,fontSize:14}}>{h.sub} Quiz {h.mult && <span className="badge badge-pink" style={{marginLeft:6,fontSize:10}}>Multiplayer</span>}</div>
+              <div className="text-sm">{h.date} • ⏱ {h.time}</div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{fontFamily:'Orbitron',fontWeight:700,fontSize:15,color: h.score >= 80 ? 'var(--green)' : h.score >= 60 ? 'var(--orange)' : 'var(--red)'}}>{h.score}%</div>
+              <div style={{fontSize:12,color:'var(--orange)'}}>⚡ +{h.pts} pts</div>
+              {h.rank && <div style={{fontSize:11,color:'var(--cyan)'}}>{h.rank} in room</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   MAIN APP
+══════════════════════════════ */
+function App() {
+  const [page, setPage] = useState('landing');
+  const [user, setUser] = useState({ name: 'Rahul Verma', email: 'rahul@edu.com', xp: 3240, level: 12, streak: 7 });
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const [selectedSubject, setSelectedSubject] = useState(null);
+
+  const addToast = useCallback(({ msg, type, icon }) => {
+    const id = Date.now();
+    setToasts(t => [...t, { id, msg, type, icon }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3000);
+  }, []);
+
+  const handleSetPage = (p) => {
+    if (p === 'landing') { setLoggedIn(false); }
+    if (!loggedIn && !['landing','auth'].includes(p)) {
+      if (p === 'multiplayer') { setLoggedIn(true); }
+      else { setLoggedIn(true); }
+    }
+    setPage(p);
+  };
+
+  const handleSetUser = (updater) => {
+    setUser(typeof updater === 'function' ? updater : { ...user, ...updater });
+    setLoggedIn(true);
+  };
+
+  const isLoggedIn = loggedIn || !['landing','auth'].includes(page);
+
+  return (
+    <>
+      <Nav page={page} setPage={handleSetPage} user={user} loggedIn={isLoggedIn && page !== 'landing' && page !== 'auth'} />
+      <ToastContainer toasts={toasts} />
+
+      {page === 'landing' && <LandingPage setPage={handleSetPage} />}
+      {page === 'auth' && <AuthPage setPage={handleSetPage} setUser={handleSetUser} addToast={addToast} />}
+
+      {!['landing','auth'].includes(page) && (
+        <div className="dash-layout">
+          <Sidebar page={page} setPage={handleSetPage} user={user} />
+          {page === 'dashboard' && <Dashboard setPage={handleSetPage} setSelectedSubject={setSelectedSubject} user={user} />}
+          {page === 'quiz' && <QuizPage setPage={handleSetPage} addToast={addToast} setUser={handleSetUser} user={user} selectedSubject={selectedSubject} />}
+          {page === 'multiplayer' && <MultiplayerPage addToast={addToast} />}
+          {page === 'leaderboard' && <LeaderboardPage />}
+          {page === 'profile' && <ProfilePage user={user} />}
+          {page === 'history' && <HistoryPage />}
+        </div>
+      )}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
