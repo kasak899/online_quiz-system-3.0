@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>QuizArena — Online Quiz System</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --primary:#7c6ef5; --primary-dark:#5b4fe0; --primary-light:#a99cf8; --primary-glow:rgba(124,110,245,0.20);
+  --accent:#e8973a; --accent-light:#f5b55a;
+  --success:#2dd4a0; --danger:#f0614a; --warning:#f5b55a; --info:#56c8f0;
+  --bg:#0b0d15; --bg2:#0f111c;
+  --surface:#13162a; --surface2:#1a1e35; --surface3:#232740;
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.13);
+  --text:#dde2f5; --text-muted:#7880a8; --text-faint:#41496b;
+  --radius:8px; --radius-lg:14px;
+  --glow:0 0 32px rgba(124,110,245,0.18);
+  --shadow:0 2px 16px rgba(0,0,0,0.45); --shadow-lg:0 8px 48px rgba(0,0,0,0.60);
+  --font:'Inter',system-ui,sans-serif;
+  --serif:'Playfair Display',Georgia,serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.65;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em;}
+::selection{background:var(--primary);color:#fff;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px;}
+
+/* ── UTILITY ── */
+.hidden{display:none!important;}
+
+/* ── PAGES — unified display system ── */
+.page{display:none;min-height:100vh;}
+.page.active{display:block;}
+.page.flex-page.active{display:flex;}
+
+/* ── NAV ── */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(14px);}
+.brand{font-family:var(--font);font-weight:800;font-size:18px;letter-spacing:-0.04em;color:var(--text);display:flex;align-items:center;gap:8px;text-decoration:none;}
+.brand-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);box-shadow:0 0 8px var(--primary);flex-shrink:0;}
+.nav-links{display:flex;gap:3px;}
+.nav-links a{color:var(--text-muted);text-decoration:none;padding:5px 12px;border-radius:6px;font-size:13.5px;font-weight:500;transition:all .18s;}
+.nav-links a:hover{background:var(--surface2);color:var(--text);}
+.nav-links a.active{background:var(--primary-glow);color:var(--primary-light);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.xp-pill{background:var(--surface2);border:1px solid var(--border2);border-radius:100px;padding:4px 13px;font-size:12.5px;font-weight:700;color:var(--accent-light);display:flex;align-items:center;gap:5px;}
+.streak-pill{background:rgba(240,97,74,0.10);border:1px solid rgba(240,97,74,0.22);border-radius:100px;padding:4px 11px;font-size:12px;font-weight:600;color:#fc8a79;display:flex;align-items:center;gap:4px;}
+.user-avatar{background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;cursor:pointer;}
+.nav-logout{font-size:12.5px;color:var(--text-faint);text-decoration:none;font-weight:500;transition:color .18s;}
+.nav-logout:hover{color:var(--text-muted);}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:var(--radius);font-family:var(--font);font-size:13.5px;font-weight:600;letter-spacing:-0.01em;cursor:pointer;border:none;transition:all .18s;white-space:nowrap;text-decoration:none;}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 0 20px var(--primary-glow);}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px);}
+.btn-outline{background:transparent;border:1.5px solid rgba(255,255,255,0.35);color:rgba(255,255,255,0.85);}
+.btn-outline:hover{background:rgba(255,255,255,0.08);border-color:#fff;}
+.btn-ghost{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--surface3);color:var(--text);}
+.btn-ghost-dark{background:var(--surface3);color:var(--text-muted);border:1px solid var(--border2);}
+.btn-ghost-dark:hover{color:var(--text);}
+.btn-success{background:var(--success);color:#061a12;font-weight:700;}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-sm{padding:5px 12px;font-size:12.5px;}
+.btn-lg{padding:11px 28px;font-size:15.5px;font-weight:700;}
+
+/* ── CARD ── */
+.card{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);box-shadow:var(--shadow);padding:22px;}
+
+/* ── FORMS ── */
+.form-group{margin-bottom:17px;}
+.form-label{display:block;font-size:11.5px;font-weight:600;color:var(--text-muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:0.06em;}
+.form-control{width:100%;padding:9px 13px;border:1.5px solid var(--border2);border-radius:var(--radius);font-family:var(--font);font-size:13.5px;color:var(--text);background:var(--surface2);transition:border .18s,box-shadow .18s;letter-spacing:-0.01em;}
+.form-control:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);}
+select.form-control option{background:var(--surface2);}
+textarea.form-control{resize:vertical;line-height:1.6;}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:100px;font-size:11.5px;font-weight:600;letter-spacing:0.01em;}
+.badge-primary{background:rgba(124,110,245,0.16);color:#b8b0fa;}
+.badge-success{background:rgba(45,212,160,0.13);color:#5ef5cc;}
+.badge-warning{background:rgba(245,181,90,0.13);color:#f5b55a;}
+.badge-danger{background:rgba(240,97,74,0.13);color:#f5806b;}
+.badge-accent{background:rgba(232,151,58,0.13);color:var(--accent-light);}
+.badge-info{background:rgba(86,200,240,0.13);color:#80d9f8;}
+
+/* ── XP TOAST ── */
+#xp-toast{position:fixed;top:74px;right:20px;z-index:9998;pointer-events:none;}
+.toast-item{background:var(--surface);border:1px solid var(--primary);border-radius:9px;padding:9px 15px;margin-bottom:7px;font-size:13px;font-weight:700;color:var(--primary-light);display:flex;align-items:center;gap:7px;box-shadow:0 0 20px var(--primary-glow);animation:toastIn .3s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px) scale(0.95);}to{opacity:1;transform:translateX(0) scale(1);}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateX(40px);}}
+
+/* ══════════ LANDING ══════════ */
+#page-landing{background:var(--bg);overflow:hidden;position:relative;flex-direction:column;}
+#page-landing::before{content:'';position:absolute;width:900px;height:900px;border-radius:50%;background:radial-gradient(circle,rgba(124,110,245,0.08) 0%,transparent 60%);top:-350px;left:50%;transform:translateX(-50%);pointer-events:none;}
+.hero{padding:100px 60px 68px;text-align:center;position:relative;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:7px;background:rgba(124,110,245,0.09);border:1px solid rgba(124,110,245,0.25);border-radius:100px;padding:5px 16px;font-size:12px;font-weight:600;letter-spacing:0.06em;color:var(--primary-light);margin-bottom:26px;text-transform:uppercase;}
+.hero h1{font-family:var(--serif);font-size:54px;line-height:1.08;margin-bottom:20px;color:var(--text);font-weight:700;}
+.hero h1 em{font-style:italic;background:linear-gradient(105deg,var(--primary-light),#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:16px;color:var(--text-muted);max-width:480px;margin:0 auto 36px;line-height:1.7;}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.hero-stats{display:flex;justify-content:center;margin-top:58px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:40px;gap:0;}
+.hero-stat{padding:0 36px;border-right:1px solid var(--border);}
+.hero-stat:last-child{border-right:none;}
+.hero-stat .hs-val{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-0.04em;}
+.hero-stat .hs-label{font-size:12px;font-weight:500;color:var(--text-muted);margin-top:2px;}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:0 60px 80px;}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px 20px;transition:border-color .22s,transform .22s;}
+.feat-card:hover{border-color:rgba(124,110,245,0.38);transform:translateY(-2px);}
+.feat-ico{font-size:24px;margin-bottom:12px;}
+.feat-card h3{font-size:14.5px;font-weight:700;margin-bottom:6px;letter-spacing:-0.02em;}
+.feat-card p{font-size:13px;color:var(--text-muted);line-height:1.65;}
+
+/* ══════════ AUTH ══════════ */
+#page-auth{flex-direction:column;align-items:center;justify-content:center;background:var(--bg);padding:40px 20px;}
+.auth-wrap{display:grid;grid-template-columns:1fr 1fr;max-width:840px;width:100%;min-height:540px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-lg);}
+.auth-left{background:linear-gradient(155deg,#0e0830 0%,#09104a 50%,#150827 100%);padding:44px 38px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;}
+.auth-left::after{content:'';position:absolute;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(124,110,245,0.20),transparent 70%);bottom:-60px;right:-60px;}
+.auth-left-brand{font-size:16px;font-weight:800;color:rgba(255,255,255,0.9);letter-spacing:-0.04em;margin-bottom:28px;display:flex;align-items:center;gap:7px;}
+.auth-left h2{font-family:var(--serif);font-size:24px;margin-bottom:10px;color:#fff;position:relative;line-height:1.3;}
+.auth-sub{font-size:13px;color:rgba(255,255,255,0.50);margin-bottom:28px;position:relative;}
+.auth-check-row{display:flex;align-items:center;gap:10px;font-size:13.5px;color:rgba(255,255,255,0.68);margin-bottom:10px;}
+.auth-check{color:var(--success);font-weight:700;font-size:13px;}
+.auth-right{background:var(--surface);padding:44px 38px;}
+.auth-tabs{display:flex;margin-bottom:26px;border-bottom:1px solid var(--border);}
+.auth-tab{background:none;border:none;font-family:var(--font);font-size:14px;font-weight:600;letter-spacing:-0.01em;padding:8px 16px 10px;cursor:pointer;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .18s;}
+.auth-tab.active{color:var(--primary-light);border-bottom-color:var(--primary);}
+
+/* ══════════ DASHBOARD LAYOUT ══════════ */
+.dash-layout{display:grid;grid-template-columns:210px 1fr;min-height:calc(100vh - 60px);}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:16px 0;display:flex;flex-direction:column;}
+.sidebar-brand-wrap{padding:0 14px 14px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.sidebar-logo{font-size:15px;font-weight:800;letter-spacing:-0.04em;color:var(--text);display:flex;align-items:center;gap:7px;}
+.sidebar-role{font-size:11px;font-weight:500;color:var(--text-faint);margin-top:2px;letter-spacing:0.02em;}
+.sidebar-xp-box{margin:0 10px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;}
+.xp-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.xp-lv{font-size:11.5px;font-weight:700;color:var(--accent-light);letter-spacing:-0.01em;}
+.xp-num{font-size:11px;font-weight:600;color:var(--text-muted);}
+.xp-bar{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;}
+.xp-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--primary),#b0a5f8);transition:width 1s ease;}
+.xp-next{font-size:10.5px;color:var(--text-faint);margin-top:5px;font-weight:500;}
+.sidebar-menu{list-style:none;padding:0;flex:1;}
+.sidebar-menu li a{display:flex;align-items:center;gap:9px;padding:9px 18px;color:var(--text-muted);text-decoration:none;font-size:13.5px;font-weight:500;letter-spacing:-0.01em;transition:all .18s;border-left:2px solid transparent;}
+.sidebar-menu li a:hover{background:var(--surface2);color:var(--text);}
+.sidebar-menu li a.active{background:rgba(124,110,245,0.09);color:var(--primary-light);border-left-color:var(--primary);}
+.sidebar-section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.10em;color:var(--text-faint);padding:14px 18px 4px;}
+.dash-main{padding:28px 30px;overflow-y:auto;}
+.dash-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;}
+.dash-title{font-size:20px;font-weight:800;letter-spacing:-0.03em;}
+.dash-sub{font-size:13px;color:var(--text-muted);margin-top:3px;font-weight:400;}
+.section-title{font-size:14px;font-weight:700;letter-spacing:-0.02em;margin-bottom:14px;}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;position:relative;overflow:hidden;transition:transform .18s;}
+.stat-card:hover{transform:translateY(-2px);}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;}
+.stat-card.blue::after{background:linear-gradient(90deg,#6c63ff,#818cf8);}
+.stat-card.green::after{background:linear-gradient(90deg,var(--success),#78f7d1);}
+.stat-card.amber::after{background:linear-gradient(90deg,var(--accent),var(--accent-light));}
+.stat-card.purple::after{background:linear-gradient(90deg,#a855f7,#d8b4fe);}
+.s-ico{font-size:20px;margin-bottom:8px;}
+.s-lbl{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-faint);}
+.s-val{font-size:22px;font-weight:800;letter-spacing:-0.04em;margin-top:3px;}
+.stat-card.blue .s-val{color:#a5a0ff;}
+.stat-card.green .s-val{color:var(--success);}
+.stat-card.amber .s-val{color:var(--accent-light);}
+.stat-card.purple .s-val{color:#d8b4fe;}
+.s-trend{font-size:11px;margin-top:4px;font-weight:500;}
+
+/* ── TABLES ── */
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.data-table td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13.5px;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:var(--surface2);}
+
+/* ══════════ SUBJECT SELECTOR ══════════ */
+#page-subject{background:var(--bg);}
+.subject-body{max-width:900px;margin:0 auto;padding:32px 28px;}
+.cat-tabs{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:4px;gap:4px;margin-bottom:24px;width:fit-content;}
+.cat-tab{padding:7px 20px;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--text-muted);transition:all .18s;letter-spacing:-0.01em;}
+.cat-tab.active{background:var(--primary);color:#fff;box-shadow:0 0 14px var(--primary-glow);}
+.subj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.subj-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;cursor:pointer;transition:border-color .18s,transform .18s,box-shadow .18s;}
+.subj-card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--glow);}
+.subj-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:12px;}
+.subj-title{font-size:14px;font-weight:700;letter-spacing:-0.02em;margin-bottom:5px;}
+.subj-meta{font-size:12px;color:var(--text-muted);line-height:1.55;margin-bottom:12px;}
+.subj-footer{display:flex;align-items:center;justify-content:space-between;}
+
+/* ══════════ QUIZ TAKING ══════════ */
+#page-quiz{background:var(--bg);}
+.quiz-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.quiz-title{font-size:15px;font-weight:700;letter-spacing:-0.02em;}
+.quiz-meta{font-size:11.5px;color:var(--text-muted);margin-top:2px;}
+.timer-box{background:var(--surface2);border:1px solid var(--border2);padding:7px 16px;border-radius:7px;font-family:var(--mono);font-size:18px;font-weight:700;letter-spacing:0.06em;color:var(--info);}
+.timer-box.urgent{background:rgba(240,97,74,0.13);border-color:var(--danger);color:var(--danger);animation:tpulse 1s infinite;}
+@keyframes tpulse{0%,100%{box-shadow:none;}50%{box-shadow:0 0 14px rgba(240,97,74,0.35);}}
+.quiz-prog-bar{height:3px;background:var(--surface3);}
+.quiz-prog-fill{height:100%;background:linear-gradient(90deg,var(--primary),#b0a5f8);transition:width .5s;}
+.quiz-body{display:grid;grid-template-columns:1fr 278px;gap:20px;padding:24px 28px;max-width:1040px;margin:0 auto;}
+.q-card{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:28px;}
+.q-meta{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.q-num{background:var(--primary-glow);border:1px solid rgba(124,110,245,0.30);color:var(--primary-light);border-radius:6px;padding:3px 10px;font-size:11.5px;font-weight:700;}
+.q-text{font-size:16.5px;font-weight:600;line-height:1.55;margin-bottom:22px;letter-spacing:-0.02em;}
+.option{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1.5px solid var(--border2);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.option:hover{border-color:var(--primary);background:rgba(124,110,245,0.06);}
+.option.selected{border-color:var(--primary);background:rgba(124,110,245,0.11);}
+.opt-lbl{width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;flex-shrink:0;color:var(--text-muted);transition:all .15s;}
+.option.selected .opt-lbl{background:var(--primary);border-color:var(--primary);color:#fff;}
+.q-nav{display:flex;justify-content:space-between;align-items:center;margin-top:22px;}
+.bonus-hint{font-size:11.5px;color:var(--accent-light);font-weight:600;}
+.q-sidebar-card{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:14px;margin-bottom:12px;}
+.q-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.q-bubble{width:32px;height:32px;border-radius:6px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;color:var(--text-muted);font-family:var(--mono);}
+.q-bubble:hover{border-color:var(--primary);color:var(--primary-light);}
+.q-bubble.answered{background:var(--primary);color:#fff;border-color:var(--primary);}
+.q-bubble.current{border-color:var(--accent);color:var(--accent-light);}
+.lock-overlay{position:fixed;inset:0;background:rgba(8,9,18,0.97);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px;}
+.lock-overlay h2{font-family:var(--serif);font-size:26px;margin-bottom:10px;color:#fff;}
+.lock-overlay p{color:var(--text-muted);max-width:400px;margin-bottom:22px;font-size:14px;line-height:1.7;}
+
+/* ══════════ RESULT ══════════ */
+#page-result{background:var(--bg);}
+.score-ring{width:140px;height:140px;border-radius:50%;border:5px solid var(--primary);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 0 32px var(--primary-glow);}
+.score-pct{font-size:34px;font-weight:800;color:var(--primary-light);letter-spacing:-0.04em;font-family:var(--mono);}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:560px;margin:0 auto 22px;}
+.xp-earned-box{background:var(--surface2);border:1px solid rgba(232,151,58,0.26);border-radius:11px;padding:14px 20px;max-width:440px;margin:0 auto 20px;display:flex;align-items:center;gap:14px;}
+.xp-earned-num{font-size:28px;font-weight:900;color:var(--accent-light);font-family:var(--mono);letter-spacing:-0.02em;}
+.xp-breakdown{font-size:11.5px;color:var(--text-muted);margin-top:3px;}
+.xp-breakdown span{color:var(--text);font-weight:600;}
+
+/* ══════════ ADD QUESTION ══════════ */
+.add-q-form{max-width:700px;}
+.option-row{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+.option-row .form-control{flex:1;}
+.correct-radio{width:16px;height:16px;accent-color:var(--success);cursor:pointer;}
+
+/* ══════════ LEADERBOARD ══════════ */
+.rank-podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin:22px 0;}
+.podium-block{border-radius:10px 10px 0 0;width:112px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:12px;}
+.r-ico{font-size:24px;margin-bottom:8px;}
+.r-name{font-size:12px;font-weight:700;color:#fff;letter-spacing:-0.01em;}
+.r-score{font-size:10.5px;color:rgba(255,255,255,0.60);margin-top:2px;font-family:var(--mono);}
+.p1{background:linear-gradient(155deg,#7a5612,#e8b840);height:150px;}
+.p2{background:linear-gradient(155deg,#364e6e,#6fa0c8);height:112px;}
+.p3{background:linear-gradient(155deg,#5c3a1c,#b8845c);height:86px;}
+
+/* ══════════ ADMIN / TEACHER PERFORMANCE ══════════ */
+.admin-tabs{display:flex;gap:3px;background:var(--surface2);padding:3px;border-radius:9px;margin-bottom:20px;border:1px solid var(--border);}
+.admin-tab{padding:6px 15px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--text-muted);transition:all .18s;letter-spacing:-0.01em;}
+.admin-tab.active{background:var(--surface3);color:var(--text);}
+.admin-pane{display:none;}
+.admin-pane.active{display:block;}
+.uavatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;}
+.perf-bar-track{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;margin-top:5px;}
+.perf-bar-fill{height:100%;border-radius:3px;transition:width .6s ease;}
+.inc-dec-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text-muted);font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1;}
+.inc-dec-btn:hover{background:var(--surface3);color:var(--text);}
+.inc-dec-btn.inc:hover{background:rgba(45,212,160,0.15);border-color:var(--success);color:var(--success);}
+.inc-dec-btn.dec:hover{background:rgba(240,97,74,0.15);border-color:var(--danger);color:var(--danger);}
+
+/* ══════════ XP HISTORY ══════════ */
+.pts-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);margin-bottom:7px;transition:border-color .18s;}
+.pts-row:hover{border-color:var(--border2);}
+.pts-val{font-size:13px;font-weight:700;font-family:var(--mono);}
+.pts-val.earn{color:var(--success);}
+.pts-val.bonus{color:var(--accent-light);}
+
+/* ══════════ CLASS TABS (Teacher) ══════════ */
+.class-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+
+/* ══════════ BACK BUTTON ══════════ */
+.back-btn{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 13px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .18s;font-family:inherit;}
+.back-btn:hover{background:var(--surface3);border-color:var(--primary);color:var(--primary-light);transform:translateX(-2px);}
+.page-back-row{padding:18px 28px 0 28px;}
+
+/* ══════════ MULTIPLAYER ══════════ */
+#page-multiplayer{background:var(--bg);}
+.mp-wrap{max-width:1100px;margin:0 auto;padding:24px 28px;}
+.mp-hero{text-align:center;padding:30px 20px;background:linear-gradient(135deg,rgba(124,110,245,0.08),rgba(245,181,90,0.04));border:1px solid var(--border);border-radius:16px;margin-bottom:24px;}
+.mp-hero h1{font-family:var(--serif);font-size:32px;font-weight:700;letter-spacing:-0.03em;margin-bottom:8px;}
+.mp-hero p{color:var(--text-muted);font-size:14px;max-width:520px;margin:0 auto;}
+.mp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px;}
+@media(max-width:760px){.mp-grid{grid-template-columns:1fr;}}
+.mp-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;}
+.mp-card h3{font-size:16px;font-weight:800;margin-bottom:14px;letter-spacing:-0.02em;}
+.mp-room-pill{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);padding:6px 14px;border-radius:999px;border:1px solid var(--border);font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent-light);}
+.mp-players-list{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;}
+.mp-player-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;}
+.mp-player-row.host{border-color:var(--accent-light);background:rgba(245,181,90,0.06);}
+.mp-player-name{font-weight:600;font-size:13.5px;}
+.mp-player-score{font-family:var(--mono);font-weight:800;color:var(--accent-light);font-size:14px;}
+.mp-chat{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;height:180px;overflow-y:auto;font-size:12.5px;display:flex;flex-direction:column;gap:5px;}
+.mp-chat-msg{padding:5px 10px;background:var(--surface3);border-radius:6px;}
+.mp-chat-msg b{color:var(--primary-light);margin-right:6px;}
+.mp-chat-input{display:flex;gap:6px;margin-top:8px;}
+.mp-q-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:30px;text-align:center;margin-bottom:18px;}
+.mp-q-text{font-size:22px;font-weight:700;letter-spacing:-0.02em;margin-bottom:24px;color:var(--text);}
+.mp-q-progress{font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;}
+.mp-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:560px){.mp-options{grid-template-columns:1fr;}}
+.mp-opt{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px;cursor:pointer;font-size:14px;font-weight:600;transition:all .18s;text-align:left;display:flex;align-items:center;gap:12px;color:var(--text);}
+.mp-opt:hover:not(.disabled){border-color:var(--primary);background:rgba(124,110,245,0.06);}
+.mp-opt.selected{border-color:var(--primary);background:rgba(124,110,245,0.10);}
+.mp-opt.correct{border-color:var(--success);background:rgba(45,212,160,0.10);color:var(--success);}
+.mp-opt.wrong{border-color:var(--danger);background:rgba(240,97,74,0.10);color:var(--danger);}
+.mp-opt.disabled{cursor:not-allowed;opacity:.7;}
+.mp-opt-lbl{width:30px;height:30px;border-radius:6px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;font-family:var(--mono);}
+.mp-status-pill{display:inline-block;padding:5px 12px;border-radius:999px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;}
+.mp-status-pill.lobby{background:rgba(86,200,240,0.12);color:var(--info);}
+.mp-status-pill.active{background:rgba(45,212,160,0.12);color:var(--success);}
+.mp-status-pill.finished{background:rgba(245,181,90,0.12);color:var(--accent-light);}
+.mp-leader-row{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;}
+.mp-leader-rank{width:32px;height:32px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--mono);font-size:14px;flex-shrink:0;}
+.mp-leader-row.gold .mp-leader-rank{background:rgba(245,181,90,0.2);color:var(--accent-light);}
+.mp-leader-row.silver .mp-leader-rank{background:rgba(168,178,193,0.2);color:#cbd5e1;}
+.mp-leader-row.bronze .mp-leader-rank{background:rgba(205,127,50,0.2);color:#d4a574;}
+
+/* TIMER pulse */
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.7;}}
+</style>
+</head>
+<body>
+
+<div id="xp-toast"></div>
+
+<!-- ═══════════════════════════
+     SHARED TOP NAV (hidden on landing/auth)
+════════════════════════════ -->
+<nav id="main-nav" class="hidden">
+  <div class="brand"><div class="brand-dot"></div>QuizArena</div>
+  <div class="nav-links">
+    <a href="#" onclick="goDash();return false;" id="nav-dash">Dashboard</a>
+    <a href="#" onclick="goSubjects();return false;">Take Quiz</a>
+    <a href="#" onclick="goAddQ();return false;" id="nav-addq">Add Question</a>
+    <a href="#" onclick="goRank();return false;">Leaderboard</a>
+    <a href="#" onclick="goMultiplayer();return false;">🎮 Multiplayer</a>
+    <a href="#" onclick="goPoints();return false;">My XP</a>
+    <a href="#" onclick="goAdmin();return false;" id="nav-admin" class="hidden">Admin</a>
+  </div>
+  <div class="nav-right">
+    <div class="xp-pill">⚡ <span id="nav-xp-val">1,240</span> XP</div>
+    <div class="streak-pill">🔥 <span>5-day streak</span></div>
+    <span style="font-size:13px;color:var(--text-muted);font-weight:500;" id="nav-user-name">Student</span>
+    <div class="user-avatar" id="nav-avatar">S</div>
+    <a href="#" onclick="doLogout();return false;" class="nav-logout">Sign out</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════
+     LANDING PAGE
+════════════════════════════ -->
+<div id="page-landing" class="page flex-page active">
+  <div class="hero">
+    <div class="hero-eyebrow">🎓 College Academic Quiz Platform</div>
+    <h1>Learn Smarter,<br><em>Score Higher</em></h1>
+    <p class="hero-sub">QuizArena — a professional platform for Coding & GK quizzes. Take assessments, earn XP, and compete with classmates.</p>
+    <div class="hero-btns">
+      <button class="btn btn-primary btn-lg" onclick="showAuthPage('login')">Get Started →</button>
+      <button class="btn btn-outline btn-lg" onclick="showAuthPage('signup')">Create Account</button>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hs-val">2,400+</div><div class="hs-label">Students</div></div>
+      <div class="hero-stat"><div class="hs-val">180+</div><div class="hs-label">Quizzes</div></div>
+      <div class="hero-stat"><div class="hs-val">9</div><div class="hs-label">Coding Subjects</div></div>
+      <div class="hero-stat"><div class="hs-val">6</div><div class="hs-label">GK Categories</div></div>
+    </div>
+  </div>
+  <div class="features">
+    <div class="feat-card"><div class="feat-ico">💻</div><h3>Coding Quizzes</h3><p>DSA, Python, C, C++, Java, Web Dev, DBMS, OS, CN — comprehensive questions for every CS subject.</p></div>
+    <div class="feat-card"><div class="feat-ico">🌍</div><h3>General Knowledge</h3><p>Current Affairs, Science, History, Geography, Polity, Sports — stay sharp on every front.</p></div>
+    <div class="feat-card"><div class="feat-ico">⚡</div><h3>XP & Levels</h3><p>Earn XP for correct answers. Level up from Bronze to Diamond. Compete on the live leaderboard.</p></div>
+    <div class="feat-card"><div class="feat-ico">🔒</div><h3>Secure Exam Mode</h3><p>Tab-switch detection prevents cheating. Assessments must be completed in one sitting.</p></div>
+    <div class="feat-card"><div class="feat-ico">👩‍🏫</div><h3>Teacher Dashboard</h3><p>Class-wise student tracking. See who's excelling and who needs attention — by class.</p></div>
+    <div class="feat-card"><div class="feat-ico">⚙️</div><h3>Admin Console</h3><p>Manage teachers, track performance, set increments & decrements — all in one place.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════
+     AUTH PAGE
+════════════════════════════ -->
+<div id="page-auth" class="page flex-page">
+  <div class="auth-wrap">
+    <div class="auth-left">
+      <div class="auth-left-brand"><div class="brand-dot"></div>QuizArena</div>
+      <h2>Begin your learning journey</h2>
+      <p class="auth-sub">Join thousands of students earning XP and competing on live leaderboards.</p>
+      <div>
+        <div class="auth-check-row"><span class="auth-check">✓</span> Earn XP for every correct answer</div>
+        <div class="auth-check-row"><span class="auth-check">✓</span> Coding & GK quizzes for college students</div>
+        <div class="auth-check-row"><span class="auth-check">✓</span> Streak bonuses for daily participation</div>
+        <div class="auth-check-row"><span class="auth-check">✓</span> Level up: Bronze → Silver → Gold → Diamond</div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login',this)">Sign In</button>
+        <button class="auth-tab" onclick="switchTab('signup',this)">Sign Up</button>
+      </div>
+      <!-- LOGIN -->
+      <div id="auth-login">
+        <div class="form-group"><label class="form-label">Email Address</label><input class="form-control" type="email" id="login-email" placeholder="you@college.edu" value="student@college.edu"/></div>
+        <div class="form-group"><label class="form-label">Password</label><input class="form-control" type="password" id="login-pass" placeholder="Enter password" value="pass123"/></div>
+        <div class="form-group"><label class="form-label">Login As</label>
+          <select class="form-control" id="login-role">
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Administrator</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px;" onclick="doLogin()">Sign In to QuizArena →</button>
+        <p style="text-align:center;margin-top:13px;font-size:12.5px;color:var(--text-muted);">Forgot password? <a href="#" style="color:var(--primary-light);font-weight:600;text-decoration:none;">Reset here</a></p>
+      </div>
+      <!-- SIGNUP -->
+      <div id="auth-signup" class="hidden">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group"><label class="form-label">First Name</label><input class="form-control" id="signup-first-name" placeholder="Arjun"/></div>
+          <div class="form-group"><label class="form-label">Last Name</label><input class="form-control" id="signup-last-name" placeholder="Sharma"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-control" id="signup-email" type="email" placeholder="you@college.edu"/></div>
+        <div class="form-group"><label class="form-label">Role</label><select class="form-control" id="signup-role"><option value="student">Student</option><option value="teacher">Teacher</option></select></div>
+        <div class="form-group"><label class="form-label">Password</label><input class="form-control" id="signup-pass" type="password" placeholder="Create a strong password"/></div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px;" onclick="doSignup()">Create Account →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════
+     DASHBOARD
+════════════════════════════ -->
+<div id="page-dash" class="page">
+  <div class="dash-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand-wrap">
+        <div class="sidebar-logo"><div class="brand-dot"></div>QuizArena</div>
+        <div class="sidebar-role" id="role-label">Student Portal</div>
+      </div>
+      <div class="sidebar-xp-box">
+        <div class="xp-row"><span class="xp-lv">⭐ Lv 8 — Gold</span><span class="xp-num" id="sb-xp">1,240 XP</span></div>
+        <div class="xp-bar"><div class="xp-bar-fill" id="sb-fill" style="width:62%"></div></div>
+        <div class="xp-next">760 XP to Level 9</div>
+      </div>
+      <ul class="sidebar-menu">
+        <li><a href="#" class="active" onclick="goDash();return false;">🏠 Dashboard</a></li>
+        <li><a href="#" onclick="goSubjects();return false;">▶️ Take Quiz</a></li>
+        <li><a href="#" onclick="goAddQ();return false;">➕ Add Question</a></li>
+        <li><a href="#" onclick="goRank();return false;">🏆 Leaderboard</a></li>
+        <li><a href="#" onclick="goPoints();return false;">⚡ My XP Points</a></li>
+        <li id="sb-admin-link" class="hidden"><a href="#" onclick="goAdmin();return false;">⚙️ Admin Console</a></li>
+        <div class="sidebar-section">Account</div>
+        <li><a href="#" onclick="doLogout();return false;">🚪 Sign Out</a></li>
+      </ul>
+    </aside>
+    <main class="dash-main">
+      <!-- STUDENT VIEW -->
+      <div id="view-student">
+        <div class="dash-header">
+          <div><div class="dash-title" id="dash-welcome">Welcome back, Arjun 👋</div><div class="dash-sub">Your performance summary</div></div>
+          <div style="display:flex;gap:9px;align-items:center;">
+            <div class="streak-pill">🔥 5-day streak</div>
+            <button class="btn btn-primary" onclick="goSubjects()">▶ Start Quiz</button>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card blue"><div class="s-ico">📚</div><div class="s-lbl">Quizzes Taken</div><div class="s-val" id="stat-taken">14</div><div class="s-trend" style="color:#a5a0ff;">+2 this week</div></div>
+          <div class="stat-card green"><div class="s-ico">🎯</div><div class="s-lbl">Average Score</div><div class="s-val" id="stat-avg">78%</div><div class="s-trend" style="color:var(--success);">↑ 4% last month</div></div>
+          <div class="stat-card amber"><div class="s-ico">🏅</div><div class="s-lbl">Global Rank</div><div class="s-val" id="stat-rank">#3</div><div class="s-trend" style="color:var(--accent-light);">Top 5%</div></div>
+          <div class="stat-card purple"><div class="s-ico">⚡</div><div class="s-lbl">Total XP</div><div class="s-val" id="stat-xp">1,240</div><div class="s-trend" style="color:#d8b4fe;">+180 this week</div></div>
+        </div>
+        <div class="card">
+          <div class="section-title">Recent Quizzes</div>
+          <table class="data-table">
+            <thead><tr><th>Quiz</th><th>Subject</th><th>Score</th><th>XP</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td><strong>DSA — Arrays & Trees</strong></td><td>Coding</td><td>85%</td><td><span style="color:var(--accent-light);font-weight:700;font-family:var(--mono);">+180 XP</span></td><td>Mar 20</td><td><span class="badge badge-success">Done</span></td><td><button class="btn btn-sm btn-ghost" onclick="goSubjects()">Retake</button></td></tr>
+              <tr><td><strong>Python Basics</strong></td><td>Coding</td><td>72%</td><td><span style="color:var(--accent-light);font-weight:700;font-family:var(--mono);">+140 XP</span></td><td>Mar 18</td><td><span class="badge badge-success">Done</span></td><td><button class="btn btn-sm btn-ghost" onclick="goSubjects()">Retake</button></td></tr>
+              <tr><td><strong>Current Affairs</strong></td><td>GK</td><td>—</td><td>—</td><td>Mar 22</td><td><span class="badge badge-warning">Pending</span></td><td><button class="btn btn-sm btn-primary" onclick="goSubjects()">Start</button></td></tr>
+              <tr><td><strong>Indian Polity</strong></td><td>GK</td><td>91%</td><td><span style="color:var(--accent-light);font-weight:700;font-family:var(--mono);">+210 XP</span></td><td>Mar 15</td><td><span class="badge badge-success">Done</span></td><td><button class="btn btn-sm btn-ghost" onclick="goSubjects()">Retake</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TEACHER VIEW -->
+      <div id="view-teacher" class="hidden">
+        <div class="dash-header">
+          <div><div class="dash-title" id="teacher-welcome">Welcome back, Prof. Ravi Kumar 👋</div><div class="dash-sub">Semester-wise student performance overview</div></div>
+          <div style="display:flex;gap:9px;">
+            <button class="btn btn-ghost-dark btn-sm" onclick="goAddQ()">➕ Add Question</button>
+            <button class="btn btn-primary btn-sm" onclick="goSubjects()">📝 Create Quiz</button>
+          </div>
+        </div>
+
+        <!-- Teacher Summary Stats -->
+        <div class="stats-grid" style="margin-bottom:20px;">
+          <div class="stat-card blue"><div class="s-ico">📅</div><div class="s-lbl">Semesters</div><div class="s-val">2</div><div class="s-trend" style="color:#a5a0ff;">Current: Sem III & IV</div></div>
+          <div class="stat-card green"><div class="s-ico">👨‍🎓</div><div class="s-lbl">Total Students</div><div class="s-val">112</div><div class="s-trend" style="color:var(--success);">Across all semesters</div></div>
+          <div class="stat-card amber"><div class="s-ico">📝</div><div class="s-lbl">Quizzes Created</div><div class="s-val">18</div><div class="s-trend" style="color:var(--accent-light);">By you</div></div>
+          <div class="stat-card purple"><div class="s-ico">📊</div><div class="s-lbl">Sem Avg Score</div><div class="s-val">74%</div><div class="s-trend" style="color:#d8b4fe;">↑ 3% this sem</div></div>
+        </div>
+
+        <!-- Semester Tabs -->
+        <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;align-items:center;">
+          <button class="btn btn-primary btn-sm" id="sem-tab-1" onclick="switchSem(1)">Semester I</button>
+          <button class="btn btn-ghost btn-sm" id="sem-tab-2" onclick="switchSem(2)">Semester II</button>
+          <button class="btn btn-ghost btn-sm" id="sem-tab-3" onclick="switchSem(3)">Semester III</button>
+          <button class="btn btn-ghost btn-sm" id="sem-tab-4" onclick="switchSem(4)">Semester IV</button>
+          <button class="btn btn-ghost btn-sm" id="sem-tab-5" onclick="switchSem(5)">Semester V</button>
+          <button class="btn btn-ghost btn-sm" id="sem-tab-6" onclick="switchSem(6)">Semester VI</button>
+        </div>
+
+        <!-- Semester I -->
+        <div id="sem-1" class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div>
+              <div class="section-title" style="margin-bottom:2px;">Semester I — Mathematics & Computer Science</div>
+              <div style="font-size:12px;color:var(--text-muted);">38 students enrolled · Academic Year 2024–25</div>
+            </div>
+            <div style="display:flex;gap:7px;">
+              <select class="form-control" style="width:auto;font-size:12px;padding:5px 10px;" onchange="filterSem(this.value,1)">
+                <option value="">All Students</option>
+                <option value="top">Top Performers (≥80%)</option>
+                <option value="risk">Needs Attention (&lt;60%)</option>
+              </select>
+              <button class="btn btn-sm btn-ghost">📥 Export</button>
+            </div>
+          </div>
+          <table class="data-table" id="t-sem-1">
+            <thead><tr><th>#</th><th>Student Name</th><th>Roll No.</th><th>Quizzes</th><th>Avg Score</th><th>XP</th><th>Last Active</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr data-score="91"><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">01</td><td><div style="font-weight:600;">Arjun Sharma</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1071627a657e50737f7c7c7577753e757465">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/001</td><td>14</td><td style="color:var(--success);font-weight:700;">91%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">3,940</td><td style="font-size:12px;color:var(--text-muted);">Today</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr data-score="87"><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">02</td><td><div style="font-weight:600;">Priya Mehta</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1a6a6873637b5a797576767f7d7f347f7e6f">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/002</td><td>13</td><td style="color:var(--success);font-weight:700;">87%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">2,875</td><td style="font-size:12px;color:var(--text-muted);">Yesterday</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr data-score="73"><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">03</td><td><div style="font-weight:600;">Dev Nair</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9afeffecdaf9f5f6f6fffdffb4fffeef">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/003</td><td>10</td><td style="color:var(--accent-light);font-weight:700;">73%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">840</td><td style="font-size:12px;color:var(--text-muted);">Mar 21</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr data-score="82"><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">04</td><td><div style="font-weight:600;">Rohan Verma</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e5978a8d848ba5868a8989808280cb808190">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/004</td><td>12</td><td style="color:var(--success);font-weight:700;">82%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">1,540</td><td style="font-size:12px;color:var(--text-muted);">Today</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr data-score="48"><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">05</td><td><div style="font-weight:600;">Karan Bose</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a8c3c9dac9c6e8cbc7c4c4cdcfcd86cdccdd">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/005</td><td>6</td><td style="color:var(--danger);font-weight:700;">48%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--text-muted);">310</td><td style="font-size:12px;color:var(--text-muted);">Mar 15</td><td><span class="badge badge-danger">At Risk</span></td></tr>
+              <tr data-score="52"><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">06</td><td><div style="font-weight:600;">Anika Singh</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="12737c7b797352717d7e7e7775773c777667">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/006</td><td>9</td><td style="color:var(--danger);font-weight:700;">52%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--text-muted);">420</td><td style="font-size:12px;color:var(--text-muted);">Mar 18</td><td><span class="badge badge-danger">At Risk</span></td></tr>
+              <tr data-score="68"><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">07</td><td><div style="font-weight:600;">Meera Iyer</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f9949c9c8b98b99a9695959c9e9cd79c9d8c">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/007</td><td>8</td><td style="color:var(--warning);font-weight:700;">68%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--text-muted);">620</td><td style="font-size:12px;color:var(--text-muted);">Mar 19</td><td><span class="badge badge-warning">Inactive</span></td></tr>
+              <tr data-score="75"><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">08</td><td><div style="font-weight:600;">Sneha Patel</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="077469626f664764686b6b62606229626372">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/008</td><td>11</td><td style="color:var(--accent-light);font-weight:700;">75%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">980</td><td style="font-size:12px;color:var(--text-muted);">Mar 20</td><td><span class="badge badge-success">Active</span></td></tr>
+            </tbody>
+          </table>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+            <div style="font-size:12px;color:var(--text-muted);">Showing 8 of 38 students</div>
+            <div style="display:flex;gap:4px;"><button class="btn btn-sm btn-ghost">← Prev</button><button class="btn btn-sm btn-ghost">Next →</button></div>
+          </div>
+        </div>
+
+        <!-- Semester II -->
+        <div id="sem-2" class="card hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div><div class="section-title" style="margin-bottom:2px;">Semester II — Data Structures & Python</div><div style="font-size:12px;color:var(--text-muted);">36 students enrolled · Academic Year 2024–25</div></div>
+            <button class="btn btn-sm btn-ghost">📥 Export</button>
+          </div>
+          <table class="data-table"><thead><tr><th>#</th><th>Student Name</th><th>Roll No.</th><th>Quizzes</th><th>Avg Score</th><th>XP</th><th>Last Active</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">01</td><td><div style="font-weight:600;">Ravi Singh</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="87f5e6f1eea9f4c7e4e8ebebe2e0e2a9e2e3f2">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/009</td><td>12</td><td style="color:var(--success);font-weight:700;">88%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">2,210</td><td style="font-size:12px;color:var(--text-muted);">Today</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">02</td><td><div style="font-weight:600;">Pooja Reddy</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9feff0f0f5fedffcf0f3f3faf8fab1fafbea">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/010</td><td>10</td><td style="color:var(--accent-light);font-weight:700;">76%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">1,120</td><td style="font-size:12px;color:var(--text-muted);">Mar 22</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">03</td><td><div style="font-weight:600;">Nikhil Das</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bbd5d2d0d3d2d7fbd8d4d7d7dedcde95dedfce">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/011</td><td>7</td><td style="color:var(--danger);font-weight:700;">55%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--text-muted);">380</td><td style="font-size:12px;color:var(--text-muted);">Mar 14</td><td><span class="badge badge-danger">At Risk</span></td></tr>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">04</td><td><div style="font-weight:600;">Shreya Gupta</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4033283225392100232f2c2c2527256e252435">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/012</td><td>11</td><td style="color:var(--success);font-weight:700;">83%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">1,780</td><td style="font-size:12px;color:var(--text-muted);">Today</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">05</td><td><div style="font-weight:600;">Amit Tiwari</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="284945415c065c684b4744444d4f4d064d4c5d">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/013</td><td>9</td><td style="color:var(--accent-light);font-weight:700;">71%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">760</td><td style="font-size:12px;color:var(--text-muted);">Mar 20</td><td><span class="badge badge-success">Active</span></td></tr>
+            </tbody>
+          </table>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">Showing 5 of 36 students</div>
+        </div>
+
+        <!-- Semester III -->
+        <div id="sem-3" class="card hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div><div class="section-title" style="margin-bottom:2px;">Semester III — C, C++ & DBMS</div><div style="font-size:12px;color:var(--text-muted);">34 students enrolled · Academic Year 2024–25</div></div>
+            <button class="btn btn-sm btn-ghost">📥 Export</button>
+          </div>
+          <table class="data-table"><thead><tr><th>#</th><th>Student Name</th><th>Roll No.</th><th>Quizzes</th><th>Avg Score</th><th>XP</th><th>Last Active</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">01</td><td><div style="font-weight:600;">Ananya Roy</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f6979897988f97b695999a9a939193d8939283">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2023/CS/001</td><td>16</td><td style="color:var(--success);font-weight:700;">92%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">4,200</td><td style="font-size:12px;color:var(--text-muted);">Today</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">02</td><td><div style="font-weight:600;">Sahil Khan</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8bf8eae3e2e7cbe8e4e7e7eeeceea5eeeffe">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2023/CS/002</td><td>13</td><td style="color:var(--accent-light);font-weight:700;">79%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">1,650</td><td style="font-size:12px;color:var(--text-muted);">Mar 21</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">03</td><td><div style="font-weight:600;">Tanvi Joshi</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="097d68677f60496a6665656c6e6c276c6d7c">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2023/CS/003</td><td>9</td><td style="color:var(--danger);font-weight:700;">57%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--text-muted);">560</td><td style="font-size:12px;color:var(--text-muted);">Mar 17</td><td><span class="badge badge-danger">At Risk</span></td></tr>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">04</td><td><div style="font-weight:600;">Rahul Dixit</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f785969f829bb794989b9b929092d9929382">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2023/CS/004</td><td>11</td><td style="color:var(--success);font-weight:700;">84%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">1,920</td><td style="font-size:12px;color:var(--text-muted);">Today</td><td><span class="badge badge-success">Active</span></td></tr>
+            </tbody>
+          </table>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">Showing 4 of 34 students</div>
+        </div>
+
+        <!-- Semester IV -->
+        <div id="sem-4" class="card hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div><div class="section-title" style="margin-bottom:2px;">Semester IV — OS, CN & Web Dev</div><div style="font-size:12px;color:var(--text-muted);">30 students enrolled · Academic Year 2024–25</div></div>
+            <button class="btn btn-sm btn-ghost">📥 Export</button>
+          </div>
+          <table class="data-table"><thead><tr><th>#</th><th>Student Name</th><th>Roll No.</th><th>Quizzes</th><th>Avg Score</th><th>XP</th><th>Last Active</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">01</td><td><div style="font-weight:600;">Vikram Rao</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="493f20223b2824092a2625252c2e2c672c2d3c">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2022/CS/001</td><td>14</td><td style="color:var(--success);font-weight:700;">86%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">2,480</td><td style="font-size:12px;color:var(--text-muted);">Today</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">02</td><td><div style="font-weight:600;">Ishita Malhotra</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="573e243f3e23361734383b3b32303279323322">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2022/CS/002</td><td>11</td><td style="color:var(--accent-light);font-weight:700;">71%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">1,020</td><td style="font-size:12px;color:var(--text-muted);">Mar 22</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">03</td><td><div style="font-weight:600;">Manish Chandra</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="49242827203a21092a2625252c2e2c672c2d3c">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2022/CS/003</td><td>8</td><td style="color:var(--danger);font-weight:700;">54%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--text-muted);">340</td><td style="font-size:12px;color:var(--text-muted);">Mar 13</td><td><span class="badge badge-danger">At Risk</span></td></tr>
+            </tbody>
+          </table>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">Showing 3 of 30 students</div>
+        </div>
+
+        <!-- Semester V -->
+        <div id="sem-5" class="card hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div><div class="section-title" style="margin-bottom:2px;">Semester V — Java, ML & Advanced DSA</div><div style="font-size:12px;color:var(--text-muted);">28 students enrolled · Academic Year 2023–24</div></div>
+            <button class="btn btn-sm btn-ghost">📥 Export</button>
+          </div>
+          <table class="data-table"><thead><tr><th>#</th><th>Student Name</th><th>Roll No.</th><th>Quizzes</th><th>Avg Score</th><th>XP</th><th>Last Active</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">01</td><td><div style="font-weight:600;">Nisha Rawat</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c3adaab0aba283a0acafafa6a4a6eda6a7b6">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2021/CS/001</td><td>18</td><td style="color:var(--success);font-weight:700;">94%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">5,100</td><td style="font-size:12px;color:var(--text-muted);">Today</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">02</td><td><div style="font-weight:600;">Kartik Sharma</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="deb5bfacaab7b59ebdb1b2b2bbb9bbf0bbbaab">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2021/CS/002</td><td>15</td><td style="color:var(--success);font-weight:700;">85%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">2,900</td><td style="font-size:12px;color:var(--text-muted);">Mar 22</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">03</td><td><div style="font-weight:600;">Divya Soni</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a8ccc1ded1c9e8cbc7c4c4cdcfcd86cdccdd">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2021/CS/003</td><td>12</td><td style="color:var(--accent-light);font-weight:700;">77%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">1,380</td><td style="font-size:12px;color:var(--text-muted);">Mar 20</td><td><span class="badge badge-success">Active</span></td></tr>
+            </tbody>
+          </table>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">Showing 3 of 28 students</div>
+        </div>
+
+        <!-- Semester VI -->
+        <div id="sem-6" class="card hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div><div class="section-title" style="margin-bottom:2px;">Semester VI — Project & Placement Prep</div><div style="font-size:12px;color:var(--text-muted);">24 students enrolled · Academic Year 2023–24</div></div>
+            <button class="btn btn-sm btn-ghost">📥 Export</button>
+          </div>
+          <table class="data-table"><thead><tr><th>#</th><th>Student Name</th><th>Roll No.</th><th>Quizzes</th><th>Avg Score</th><th>XP</th><th>Last Active</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">01</td><td><div style="font-weight:600;">Suresh Pillai</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a4d7d1d6c1d7cce4c7cbc8c8c1c3c18ac1c0d1">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2020/CS/001</td><td>20</td><td style="color:var(--success);font-weight:700;">96%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">6,400</td><td style="font-size:12px;color:var(--text-muted);">Today</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">02</td><td><div style="font-weight:600;">Riya Batra</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8ffde6f6eecfece0e3e3eae8eaa1eaebfa">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2020/CS/002</td><td>17</td><td style="color:var(--success);font-weight:700;">89%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">3,850</td><td style="font-size:12px;color:var(--text-muted);">Today</td><td><span class="badge badge-success">Active</span></td></tr>
+              <tr><td style="color:var(--text-faint);font-family:var(--mono);font-size:12px;">03</td><td><div style="font-weight:600;">Varun Menon</div><div style="font-size:11px;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fb8d9a898e95bb989497979e9c9ed59e9f8e">[email&#160;protected]</a></div></td><td style="font-family:var(--mono);font-size:12px;">2020/CS/003</td><td>16</td><td style="color:var(--accent-light);font-weight:700;">78%</td><td style="font-family:var(--mono);font-size:12.5px;color:var(--accent-light);">2,100</td><td style="font-size:12px;color:var(--text-muted);">Mar 21</td><td><span class="badge badge-success">Active</span></td></tr>
+            </tbody>
+          </table>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">Showing 3 of 24 students</div>
+        </div>
+
+      </div><!-- end view-teacher -->
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════
+     MY XP POINTS
+════════════════════════════ -->
+<div id="page-points" class="page">
+  <div class="page-back-row">
+    <button class="back-btn" onclick="goBack()" data-testid="points-back-btn">← Back</button>
+  </div>
+  <div class="dash-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand-wrap"><div class="sidebar-logo"><div class="brand-dot"></div>QuizArena</div></div>
+      <div class="sidebar-xp-box"><div class="xp-row"><span class="xp-lv">⭐ Lv 8 — Gold</span><span class="xp-num">1,240 XP</span></div><div class="xp-bar"><div class="xp-bar-fill" style="width:62%"></div></div><div class="xp-next">760 XP to Level 9</div></div>
+      <ul class="sidebar-menu">
+        <li><a href="#" onclick="goDash();return false;">🏠 Dashboard</a></li>
+        <li><a href="#" onclick="goSubjects();return false;">▶️ Take Quiz</a></li>
+        <li><a href="#" onclick="goAddQ();return false;">➕ Add Question</a></li>
+        <li><a href="#" onclick="goRank();return false;">🏆 Leaderboard</a></li>
+        <li><a href="#" class="active">⚡ My XP Points</a></li>
+        <div class="sidebar-section">Account</div>
+        <li><a href="#" onclick="doLogout();return false;">🚪 Sign Out</a></li>
+      </ul>
+    </aside>
+    <main class="dash-main">
+      <div class="dash-header"><div class="dash-title">⚡ My XP Points & Progress</div></div>
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;">
+          <div>
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);margin-bottom:7px;">Current Level</div>
+            <div style="font-size:22px;font-weight:800;color:var(--accent-light);letter-spacing:-0.04em;margin-bottom:4px;">⭐ Level 8 — Gold</div>
+            <div style="font-size:13px;color:var(--text-muted);">1,240 / 2,000 XP to next level</div>
+            <div style="margin-top:12px;height:8px;background:var(--surface3);border-radius:4px;overflow:hidden;"><div style="width:62%;height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px;"></div></div>
+          </div>
+          <div style="text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 24px;">
+            <div style="font-size:32px;font-weight:900;color:var(--primary-light);letter-spacing:-0.05em;font-family:var(--mono);">1,240</div>
+            <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">Total XP</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="section-title">Level Tiers</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+          <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(205,127,50,0.25);"><div style="font-size:20px;margin-bottom:8px;">🥉</div><div style="font-weight:700;color:#cd7f32;font-size:13.5px;">Bronze</div><div style="font-size:11.5px;color:var(--text-muted);margin-top:3px;">Lv 1–3 · 0–300 XP</div></div>
+          <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(168,178,193,0.22);"><div style="font-size:20px;margin-bottom:8px;">🥈</div><div style="font-weight:700;color:#a8b2c1;font-size:13.5px;">Silver</div><div style="font-size:11.5px;color:var(--text-muted);margin-top:3px;">Lv 4–6 · 300–700 XP</div></div>
+          <div style="background:rgba(245,181,90,0.05);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(245,181,90,0.30);"><div style="font-size:20px;margin-bottom:8px;">⭐</div><div style="font-weight:700;color:var(--accent-light);font-size:13.5px;">Gold — You</div><div style="font-size:11.5px;color:var(--text-muted);margin-top:3px;">Lv 7–10 · 700–2000 XP</div></div>
+          <div style="background:rgba(86,200,240,0.04);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(86,200,240,0.17);"><div style="font-size:20px;margin-bottom:8px;">💎</div><div style="font-weight:700;color:var(--info);font-size:13.5px;">Diamond</div><div style="font-size:11.5px;color:var(--text-muted);margin-top:3px;">Lv 11+ · 2000+ XP</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">XP History</div>
+        <div class="pts-row"><span style="font-size:13px;">🎯 Indian Polity Quiz — 91%</span><span class="pts-val earn">+210 XP</span></div>
+        <div class="pts-row"><span style="font-size:13px;">🔥 5-Day Login Streak Bonus</span><span class="pts-val bonus">+50 XP</span></div>
+        <div class="pts-row"><span style="font-size:13px;">🎯 DSA — Arrays & Trees — 85%</span><span class="pts-val earn">+180 XP</span></div>
+        <div class="pts-row"><span style="font-size:13px;">🎯 Python Basics — 72%</span><span class="pts-val earn">+140 XP</span></div>
+        <div class="pts-row"><span style="font-size:13px;">➕ Question Contribution Approved</span><span class="pts-val bonus">+30 XP</span></div>
+        <div class="pts-row"><span style="font-size:13px;">🎯 C++ OOP Quiz — 88%</span><span class="pts-val earn">+195 XP</span></div>
+        <div class="pts-row"><span style="font-size:13px;">🏅 1st Place — DSA Quiz</span><span class="pts-val bonus">+100 XP</span></div>
+        <div class="pts-row"><span style="font-size:13px;">🎯 History Quiz — 65%</span><span class="pts-val earn">+115 XP</span></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════
+     SUBJECT SELECTOR
+════════════════════════════ -->
+<div id="page-subject" class="page">
+  <div class="subject-body">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
+      <button class="btn btn-ghost-dark btn-sm" onclick="goBack()" data-testid="subject-back-btn">← Back</button>
+      <div>
+        <div class="dash-title">Choose Your Quiz</div>
+        <div class="dash-sub" style="margin-top:2px;">Select a subject to begin</div>
+      </div>
+    </div>
+    <div class="cat-tabs">
+      <button class="cat-tab active" id="cat-coding" onclick="switchCat('coding',this)">💻 Coding</button>
+      <button class="cat-tab" id="cat-gk" onclick="switchCat('gk',this)">🌍 General Knowledge</button>
+    </div>
+
+    <!-- CODING -->
+    <div id="subj-coding">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-faint);margin-bottom:14px;">Programming Topics</div>
+      <div class="subj-grid">
+        <div class="subj-card" onclick="launchQuiz('DSA','12 Questions · 20 Min · Up to +300 XP')"><div class="subj-icon" style="background:rgba(124,110,245,0.12);color:var(--primary-light);">🌲</div><div class="subj-title">Data Structures & Algorithms</div><div class="subj-meta">Arrays · Trees · Graphs · DP · Sorting</div><div class="subj-footer"><span class="badge badge-primary">42 Questions</span><span style="font-size:11px;color:var(--text-muted);">Intermediate</span></div></div>
+        <div class="subj-card" onclick="launchQuiz('Python','10 Questions · 15 Min · Up to +250 XP')"><div class="subj-icon" style="background:rgba(45,212,160,0.12);color:var(--success);">🐍</div><div class="subj-title">Python Programming</div><div class="subj-meta">Syntax · OOP · Libraries · File I/O</div><div class="subj-footer"><span class="badge badge-success">38 Questions</span><span style="font-size:11px;color:var(--text-muted);">Beginner–Adv</span></div></div>
+        <div class="subj-card" onclick="launchQuiz('C Programming','10 Questions · 15 Min · Up to +250 XP')"><div class="subj-icon" style="background:rgba(86,200,240,0.12);color:var(--info);">⚙️</div><div class="subj-title">C Programming</div><div class="subj-meta">Pointers · Memory · Structs · File Ops</div><div class="subj-footer"><span class="badge badge-info">35 Questions</span><span style="font-size:11px;color:var(--text-muted);">Beginner</span></div></div>
+        <div class="subj-card" onclick="launchQuiz('C++','10 Questions · 15 Min · Up to +250 XP')"><div class="subj-icon" style="background:rgba(240,97,74,0.12);color:#f5806b;">⚡</div><div class="subj-title">C++ Programming</div><div class="subj-meta">OOP · STL · Templates · Inheritance</div><div class="subj-footer"><span class="badge badge-danger">40 Questions</span><span style="font-size:11px;color:var(--text-muted);">Intermediate</span></div></div>
+        <div class="subj-card" onclick="launchQuiz('Java','10 Questions · 15 Min · Up to +250 XP')"><div class="subj-icon" style="background:rgba(245,181,90,0.12);color:var(--accent-light);">☕</div><div class="subj-title">Java</div><div class="subj-meta">Collections · Threads · JVM · Spring</div><div class="subj-footer"><span class="badge badge-accent">36 Questions</span><span style="font-size:11px;color:var(--text-muted);">Intermediate</span></div></div>
+        <div class="subj-card" onclick="launchQuiz('Web Development','12 Questions · 18 Min · Up to +300 XP')"><div class="subj-icon" style="background:rgba(168,85,247,0.12);color:#d8b4fe;">🌐</div><div class="subj-title">Web Development</div><div class="subj-meta">HTML · CSS · JavaScript · React · REST</div><div class="subj-footer"><span class="badge badge-primary" style="background:rgba(168,85,247,0.14);color:#d8b4fe;">44 Questions</span><span style="font-size:11px;color:var(--text-muted);">All Levels</span></div></div>
+        <div class="subj-card" onclick="launchQuiz('DBMS & SQL','10 Questions · 15 Min · Up to +250 XP')"><div class="subj-icon" style="background:rgba(45,212,160,0.10);color:#5ef5cc;">🗄️</div><div class="subj-title">DBMS & SQL</div><div class="subj-meta">Queries · Joins · Normalization · ACID</div><div class="subj-footer"><span class="badge badge-success">30 Questions</span><span style="font-size:11px;color:var(--text-muted);">Beginner–Inter.</span></div></div>
+        <div class="subj-card" onclick="launchQuiz('Operating Systems','10 Questions · 15 Min · Up to +250 XP')"><div class="subj-icon" style="background:rgba(86,200,240,0.10);color:#80d9f8;">🖥️</div><div class="subj-title">Operating Systems</div><div class="subj-meta">Scheduling · Memory · Deadlocks · Threads</div><div class="subj-footer"><span class="badge badge-info">28 Questions</span><span style="font-size:11px;color:var(--text-muted);">Intermediate</span></div></div>
+        <div class="subj-card" onclick="launchQuiz('Computer Networks','10 Questions · 15 Min · Up to +250 XP')"><div class="subj-icon" style="background:rgba(124,110,245,0.10);color:var(--primary-light);">📡</div><div class="subj-title">Computer Networks</div><div class="subj-meta">TCP/IP · OSI · Routing · DNS · HTTP</div><div class="subj-footer"><span class="badge badge-primary">32 Questions</span><span style="font-size:11px;color:var(--text-muted);">Intermediate</span></div></div>
+      </div>
+    </div>
+
+    <!-- GK -->
+    <div id="subj-gk" class="hidden">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-faint);margin-bottom:14px;">General Knowledge Topics</div>
+      <div class="subj-grid">
+        <div class="subj-card" onclick="launchQuiz('Current Affairs','15 Questions · 10 Min · Up to +200 XP')"><div class="subj-icon" style="background:rgba(45,212,160,0.12);color:var(--success);">📰</div><div class="subj-title">Current Affairs</div><div class="subj-meta">National · International · Awards · Schemes</div><div class="subj-footer"><span class="badge badge-success">50 Questions</span><span style="font-size:11px;color:var(--text-muted);">Weekly Updated</span></div></div>
+        <div class="subj-card" onclick="launchQuiz('Science & Technology','12 Questions · 15 Min · Up to +250 XP')"><div class="subj-icon" style="background:rgba(86,200,240,0.12);color:var(--info);">🔬</div><div class="subj-title">Science & Technology</div><div class="subj-meta">Physics · Chemistry · Biology · Space · AI</div><div class="subj-footer"><span class="badge badge-info">45 Questions</span><span style="font-size:11px;color:var(--text-muted);">All Levels</span></div></div>
+        <div class="subj-card" onclick="launchQuiz('History & Culture','10 Questions · 12 Min · Up to +220 XP')"><div class="subj-icon" style="background:rgba(245,181,90,0.12);color:var(--accent-light);">🏛️</div><div class="subj-title">History & Culture</div><div class="subj-meta">Ancient India · Freedom Movement · World</div><div class="subj-footer"><span class="badge badge-accent">40 Questions</span><span style="font-size:11px;color:var(--text-muted);">Beginner</span></div></div>
+        <div class="subj-card" onclick="launchQuiz('Geography','10 Questions · 12 Min · Up to +220 XP')"><div class="subj-icon" style="background:rgba(240,97,74,0.12);color:#f5806b;">🗺️</div><div class="subj-title">Geography</div><div class="subj-meta">Rivers · States · Capitals · Climate</div><div class="subj-footer"><span class="badge badge-danger">35 Questions</span><span style="font-size:11px;color:var(--text-muted);">Beginner</span></div></div>
+        <div class="subj-card" onclick="launchQuiz('Indian Polity','10 Questions · 12 Min · Up to +220 XP')"><div class="subj-icon" style="background:rgba(124,110,245,0.12);color:var(--primary-light);">⚖️</div><div class="subj-title">Indian Polity</div><div class="subj-meta">Constitution · Parliament · Rights · Elections</div><div class="subj-footer"><span class="badge badge-primary">38 Questions</span><span style="font-size:11px;color:var(--text-muted);">Intermediate</span></div></div>
+        <div class="subj-card" onclick="launchQuiz('Sports & Games','10 Questions · 10 Min · Up to +200 XP')"><div class="subj-icon" style="background:rgba(45,212,160,0.10);color:#5ef5cc;">🏆</div><div class="subj-title">Sports & Games</div><div class="subj-meta">Cricket · Olympics · Records · Stadiums</div><div class="subj-footer"><span class="badge badge-success">30 Questions</span><span style="font-size:11px;color:var(--text-muted);">All Levels</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════
+     QUIZ TAKING
+════════════════════════════ -->
+<div id="page-quiz" class="page">
+  <div class="page-back-row" style="padding-bottom:0;">
+    <button class="back-btn" onclick="if(confirm('Exit quiz? Progress will be lost.')) { stopTimer(); goBack(); }" data-testid="quiz-back-btn">← Back</button>
+  </div>
+  <div class="lock-overlay hidden" id="lock-overlay">
+    <div style="font-size:56px;margin-bottom:16px;">🔒</div>
+    <h2>Quiz Locked!</h2>
+    <p>You tried to leave the quiz. This has been recorded. You must complete the quiz before exiting.</p>
+    <button class="btn btn-primary btn-lg" onclick="resumeQuiz()">Return to Quiz</button>
+  </div>
+  <div class="quiz-topbar">
+    <div>
+      <div class="quiz-title" id="quiz-subject-title">DSA — Quiz</div>
+      <div class="quiz-meta" id="quiz-subject-meta">10 Questions · 15 Min · Up to +250 XP</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="bonus-hint">⚡ Speed bonus active!</div>
+      <div class="timer-box" id="timer">14:32</div>
+    </div>
+  </div>
+  <div class="quiz-prog-bar"><div class="quiz-prog-fill" id="q-progress" style="width:30%"></div></div>
+  <div class="quiz-body">
+    <div>
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-num">Question 3 of 10</span>
+          <span class="badge badge-primary" id="q-subject-badge">DSA</span>
+          <span class="badge badge-info">+25 XP</span>
+          <span style="margin-left:auto;font-size:12px;color:var(--text-muted);font-weight:500;">4 marks</span>
+        </div>
+        <div class="q-text" id="q-text">What is the time complexity of Binary Search?</div>
+        <div id="options-area">
+          <div class="option" onclick="selectOpt(this)"><div class="opt-lbl">A</div><div style="font-size:14px;">O(n)</div></div>
+          <div class="option" onclick="selectOpt(this)"><div class="opt-lbl">B</div><div style="font-size:14px;">O(log n)</div></div>
+          <div class="option" onclick="selectOpt(this)"><div class="opt-lbl">C</div><div style="font-size:14px;">O(n²)</div></div>
+          <div class="option" onclick="selectOpt(this)"><div class="opt-lbl">D</div><div style="font-size:14px;">O(1)</div></div>
+        </div>
+        <div class="q-nav">
+          <button class="btn btn-ghost">← Previous</button>
+          <div class="bonus-hint">Answer in 10s for +5 XP</div>
+          <button class="btn btn-primary" onclick="nextQ()">Next →</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="q-sidebar-card">
+        <div class="section-title" style="font-size:13px;margin-bottom:11px;">Question Palette</div>
+        <div class="q-grid" id="q-palette">
+          <div class="q-bubble answered">1</div><div class="q-bubble answered">2</div>
+          <div class="q-bubble current">3</div><div class="q-bubble">4</div>
+          <div class="q-bubble">5</div><div class="q-bubble">6</div>
+          <div class="q-bubble">7</div><div class="q-bubble">8</div>
+          <div class="q-bubble">9</div><div class="q-bubble">10</div>
+        </div>
+        <div style="margin-top:11px;display:flex;flex-direction:column;gap:5px;">
+          <div style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-muted);"><div style="width:11px;height:11px;background:var(--primary);border-radius:2px;flex-shrink:0;"></div>Answered (2)</div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-muted);"><div style="width:11px;height:11px;border:1px solid var(--border2);border-radius:2px;flex-shrink:0;"></div>Not answered (8)</div>
+        </div>
+      </div>
+      <div class="q-sidebar-card">
+        <div style="font-size:12.5px;font-weight:700;margin-bottom:9px;color:var(--accent-light);">⚡ XP This Quiz</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:2.1;">
+          <div style="display:flex;justify-content:space-between;"><span>Base (2 answered)</span><span style="color:var(--text);font-family:var(--mono);font-size:11.5px;">+50 XP</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>Speed bonuses</span><span style="color:var(--accent-light);font-family:var(--mono);font-size:11.5px;">+10 XP</span></div>
+          <div style="border-top:1px solid var(--border);margin-top:5px;padding-top:6px;display:flex;justify-content:space-between;font-weight:700;"><span>Running total</span><span style="color:var(--primary-light);font-family:var(--mono);font-size:12px;">+60 XP</span></div>
+        </div>
+      </div>
+      <div class="q-sidebar-card">
+        <div style="font-size:12.5px;font-weight:700;margin-bottom:9px;">⚠️ Rules</div>
+        <ul style="font-size:12px;color:var(--text-muted);padding-left:15px;line-height:2;">
+          <li>Do not switch tabs or minimize.</li>
+          <li>Quiz auto-submits at time limit.</li>
+          <li>Each question carries 4 marks.</li>
+          <li>No negative marking.</li>
+        </ul>
+      </div>
+      <button class="btn btn-danger" style="width:100%;justify-content:center;" onclick="showResult()">Submit Quiz</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════
+     RESULT
+════════════════════════════ -->
+<div id="page-result" class="page">
+  <div class="page-back-row">
+    <button class="back-btn" onclick="goBack()" data-testid="result-back-btn">← Back</button>
+  </div>
+  <div style="max-width:680px;margin:0 auto;padding:28px;">
+    <div class="card" style="text-align:center;padding:40px 30px;">
+      <div style="font-size:40px;margin-bottom:10px;">🎓</div>
+      <div style="font-family:var(--serif);font-size:26px;font-weight:700;margin-bottom:5px;letter-spacing:-0.01em;">Quiz Complete!</div>
+      <p style="color:var(--text-muted);margin-bottom:26px;font-size:13.5px;" id="result-subject">DSA — Quiz</p>
+      <div class="score-ring"><div class="score-pct">80%</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Score</div></div>
+      <div class="xp-earned-box">
+        <div style="font-size:34px;">⚡</div>
+        <div>
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:4px;">XP Earned This Quiz</div>
+          <div class="xp-earned-num">+180 XP</div>
+          <div class="xp-breakdown">Base: <span>+150</span> · Speed: <span>+20</span> · Streak: <span>+10</span></div>
+        </div>
+      </div>
+      <div class="result-grid">
+        <div class="stat-card green" style="text-align:center;"><div class="s-ico">✅</div><div class="s-lbl">Correct</div><div class="s-val">8</div></div>
+        <div class="stat-card" style="text-align:center;border-color:var(--border);"><div class="s-ico">❌</div><div class="s-lbl">Wrong</div><div class="s-val" style="color:var(--danger);">2</div></div>
+        <div class="stat-card amber" style="text-align:center;"><div class="s-ico">🏅</div><div class="s-lbl">Rank</div><div class="s-val">#2</div></div>
+      </div>
+      <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="goSubjects()">Try Another Quiz</button>
+        <button class="btn btn-ghost" onclick="goRank()">Leaderboard</button>
+        <button class="btn btn-primary" onclick="goDash()">Dashboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════
+     ADD QUESTION
+════════════════════════════ -->
+<div id="page-addq" class="page">
+  <div class="page-back-row">
+    <button class="back-btn" onclick="goBack()" data-testid="addq-back-btn">← Back</button>
+  </div>
+  <div class="dash-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand-wrap"><div class="sidebar-logo"><div class="brand-dot"></div>QuizArena</div><div class="sidebar-role" id="role-label2">Portal</div></div>
+      <div class="sidebar-xp-box"><div class="xp-row"><span class="xp-lv">⭐ Lv 8 — Gold</span><span class="xp-num">1,240 XP</span></div><div class="xp-bar"><div class="xp-bar-fill" style="width:62%"></div></div><div class="xp-next">760 XP to Level 9</div></div>
+      <ul class="sidebar-menu">
+        <li><a href="#" onclick="goDash();return false;">🏠 Dashboard</a></li>
+        <li><a href="#" onclick="goSubjects();return false;">▶️ Take Quiz</a></li>
+        <li><a href="#" class="active">➕ Add Question</a></li>
+        <li><a href="#" onclick="goRank();return false;">🏆 Leaderboard</a></li>
+        <li><a href="#" onclick="goPoints();return false;">⚡ My XP Points</a></li>
+        <li id="sb-admin-link2" class="hidden"><a href="#" onclick="goAdmin();return false;">⚙️ Admin Console</a></li>
+        <div class="sidebar-section">Account</div>
+        <li><a href="#" onclick="doLogout();return false;">🚪 Sign Out</a></li>
+      </ul>
+    </aside>
+    <main class="dash-main">
+      <div class="dash-header">
+        <div><div class="dash-title">Add New Question</div><div class="dash-sub">Earn <span style="color:var(--accent-light);font-weight:600;">+30 XP</span> per approved question</div></div>
+      </div>
+      <div class="card add-q-form">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="form-group"><label class="form-label">Category</label><select class="form-control"><option>Coding</option><option>General Knowledge</option></select></div>
+          <div class="form-group"><label class="form-label">Subject</label>
+            <select class="form-control">
+              <option>DSA</option><option>Python</option><option>C Programming</option><option>C++</option><option>Java</option><option>Web Development</option><option>DBMS & SQL</option><option>Operating Systems</option><option>Computer Networks</option>
+              <option>Current Affairs</option><option>Science & Technology</option><option>History & Culture</option><option>Geography</option><option>Indian Polity</option><option>Sports & Games</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="form-group"><label class="form-label">Difficulty</label><select class="form-control"><option>Easy</option><option>Medium</option><option>Hard</option></select></div>
+          <div class="form-group"><label class="form-label">Marks</label><input class="form-control" type="number" value="4"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Question Text</label><textarea class="form-control" rows="3" placeholder="Type your question here..."></textarea></div>
+        <div class="form-group">
+          <label class="form-label">Answer Options <span style="color:var(--text-faint);font-weight:400;text-transform:none;font-size:11px;">(mark the correct one)</span></label>
+          <div class="option-row"><input class="form-control" placeholder="Option A"/><input type="radio" name="correct" class="correct-radio"/><span style="font-size:11.5px;color:var(--text-muted);white-space:nowrap;">Correct?</span></div>
+          <div class="option-row"><input class="form-control" placeholder="Option B"/><input type="radio" name="correct" class="correct-radio"/><span style="font-size:11.5px;color:var(--text-muted);white-space:nowrap;">Correct?</span></div>
+          <div class="option-row"><input class="form-control" placeholder="Option C"/><input type="radio" name="correct" class="correct-radio"/><span style="font-size:11.5px;color:var(--text-muted);white-space:nowrap;">Correct?</span></div>
+          <div class="option-row"><input class="form-control" placeholder="Option D"/><input type="radio" name="correct" class="correct-radio"/><span style="font-size:11.5px;color:var(--text-muted);white-space:nowrap;">Correct?</span></div>
+        </div>
+        <div class="form-group"><label class="form-label">Topic Tag</label><input class="form-control" placeholder="e.g. Binary Search, Linked Lists"/></div>
+        <div class="form-group"><label class="form-label">Explanation (optional)</label><textarea class="form-control" rows="2" placeholder="Brief explanation shown after answer..."></textarea></div>
+        <div style="display:flex;gap:9px;">
+          <button class="btn btn-primary" onclick="saveQuestion()">Save Question</button>
+          <button class="btn btn-ghost">Save &amp; Add Another</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════
+     LEADERBOARD
+════════════════════════════ -->
+<div id="page-rank" class="page">
+  <div class="page-back-row">
+    <button class="back-btn" onclick="goBack()" data-testid="rank-back-btn">← Back</button>
+  </div>
+  <div class="dash-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand-wrap"><div class="sidebar-logo"><div class="brand-dot"></div>QuizArena</div></div>
+      <div class="sidebar-xp-box"><div class="xp-row"><span class="xp-lv">⭐ Lv 8 — Gold</span><span class="xp-num">1,240 XP</span></div><div class="xp-bar"><div class="xp-bar-fill" style="width:62%"></div></div><div class="xp-next">760 XP to Level 9</div></div>
+      <ul class="sidebar-menu">
+        <li><a href="#" onclick="goDash();return false;">🏠 Dashboard</a></li>
+        <li><a href="#" onclick="goSubjects();return false;">▶️ Take Quiz</a></li>
+        <li><a href="#" onclick="goAddQ();return false;">➕ Add Question</a></li>
+        <li><a href="#" class="active">🏆 Leaderboard</a></li>
+        <li><a href="#" onclick="goPoints();return false;">⚡ My XP Points</a></li>
+        <div class="sidebar-section">Account</div>
+        <li><a href="#" onclick="doLogout();return false;">🚪 Sign Out</a></li>
+      </ul>
+    </aside>
+    <main class="dash-main">
+      <div class="dash-header">
+        <div class="dash-title">🏆 Leaderboard</div>
+        <select class="form-control" style="width:auto;"><option>All Quizzes</option><option>DSA</option><option>Python</option><option>C++</option><option>Current Affairs</option></select>
+      </div>
+      <div class="card">
+        <div class="rank-podium">
+          <div style="text-align:center;"><div style="font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-muted);">2nd</div><div class="podium-block p2"><div class="r-ico">🥈</div><div class="r-name">Priya Mehta</div><div class="r-score">2,875 XP</div></div></div>
+          <div style="text-align:center;"><div style="font-size:12px;font-weight:600;margin-bottom:6px;color:var(--accent-light);">1st</div><div class="podium-block p1"><div class="r-ico">🥇</div><div class="r-name">Arjun Sharma</div><div class="r-score">3,940 XP</div></div></div>
+          <div style="text-align:center;"><div style="font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-muted);">3rd</div><div class="podium-block p3"><div class="r-ico">🥉</div><div class="r-name">Ravi Kumar</div><div class="r-score">2,820 XP</div></div></div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Rank</th><th>Student</th><th>Level</th><th>Quizzes</th><th>Avg Score</th><th>Total XP</th><th>Tier</th></tr></thead>
+          <tbody>
+            <tr><td style="font-weight:700;color:var(--primary-light);">🥇 1</td><td><strong>Arjun Sharma</strong></td><td style="color:var(--info);">💎 Lv 12</td><td>18</td><td>91%</td><td style="font-weight:700;color:var(--accent-light);font-family:var(--mono);">3,940</td><td><span class="badge badge-info">💎 Diamond</span></td></tr>
+            <tr><td style="font-weight:700;color:var(--primary-light);">🥈 2</td><td>Priya Mehta</td><td style="color:var(--accent-light);">⭐ Lv 10</td><td>16</td><td>87%</td><td style="font-weight:700;color:var(--accent-light);font-family:var(--mono);">2,875</td><td><span class="badge badge-accent">⭐ Gold</span></td></tr>
+            <tr><td style="font-weight:700;color:var(--primary-light);">🥉 3</td><td>Ravi Kumar</td><td style="color:var(--accent-light);">⭐ Lv 9</td><td>15</td><td>82%</td><td style="font-weight:700;color:var(--accent-light);font-family:var(--mono);">2,820</td><td><span class="badge badge-accent">⭐ Gold</span></td></tr>
+            <tr style="background:rgba(124,110,245,0.06);"><td style="font-weight:700;color:var(--primary-light);">→ 4 (You)</td><td><strong>You</strong></td><td style="color:var(--accent-light);">⭐ Lv 8</td><td>14</td><td>78%</td><td style="font-weight:700;color:var(--accent-light);font-family:var(--mono);">1,240</td><td><span class="badge badge-warning">⭐ Gold</span></td></tr>
+            <tr><td style="font-weight:700;color:var(--primary-light);">5</td><td>Sneha Patel</td><td>🥈 Lv 7</td><td>11</td><td>75%</td><td style="font-family:var(--mono);">980</td><td>—</td></tr>
+            <tr><td style="font-weight:700;color:var(--primary-light);">6</td><td>Dev Nair</td><td>🥈 Lv 6</td><td>10</td><td>73%</td><td style="font-family:var(--mono);">840</td><td>—</td></tr>
+            <tr><td style="font-weight:700;color:var(--primary-light);">7</td><td>Anika Singh</td><td>🥈 Lv 5</td><td>9</td><td>70%</td><td style="font-family:var(--mono);">710</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════
+     ADMIN CONSOLE
+════════════════════════════ -->
+<div id="page-admin" class="page">
+  <div class="dash-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand-wrap">
+        <div class="sidebar-logo"><div class="brand-dot"></div>QuizArena</div>
+        <div class="sidebar-role">Admin Console</div>
+      </div>
+      <ul class="sidebar-menu">
+        <li><a href="#" class="active" id="adm-nav-perf" onclick="adminSection('perf');return false;">📊 Teacher Performance</a></li>
+        <li><a href="#" id="adm-nav-quizzes" onclick="adminSection('quizzes');return false;">📝 Quizzes</a></li>
+        <li><a href="#" id="adm-nav-students" onclick="adminSection('students');return false;">👥 Students</a></li>
+        <li><a href="#" id="adm-nav-xp" onclick="adminSection('xp');return false;">⚡ XP Settings</a></li>
+        <li><a href="#" id="adm-nav-settings" onclick="adminSection('settings');return false;">⚙️ Platform</a></li>
+        <div class="sidebar-section">Account</div>
+        <li><a href="#" onclick="doLogout();return false;">🚪 Sign Out</a></li>
+      </ul>
+    </aside>
+
+    <main class="dash-main">
+
+      <!-- ══ ADMIN HEADER ══ -->
+      <div class="dash-header">
+        <div>
+          <div class="dash-title">Admin Console</div>
+          <div class="dash-sub">Welcome, Administrator · QuizArena Management Panel</div>
+        </div>
+        <div style="display:flex;gap:9px;align-items:center;">
+          <div style="font-size:12px;color:var(--text-muted);background:var(--surface2);border:1px solid var(--border);padding:5px 12px;border-radius:7px;">📅 March 2026</div>
+          <button class="btn btn-primary btn-sm" onclick="xpToast('Reports exported!','var(--success)')">📥 Export Report</button>
+        </div>
+      </div>
+
+      <!-- ══ PLATFORM KPIs ══ -->
+      <div class="stats-grid" style="margin-bottom:24px;">
+        <div class="stat-card blue"><div class="s-ico">👥</div><div class="s-lbl">Total Students</div><div class="s-val">248</div><div class="s-trend" style="color:#a5a0ff;">+12 this month</div></div>
+        <div class="stat-card green"><div class="s-ico">👩‍🏫</div><div class="s-lbl">Teachers</div><div class="s-val">5</div><div class="s-trend" style="color:var(--success);">Active faculty</div></div>
+        <div class="stat-card amber"><div class="s-ico">📝</div><div class="s-lbl">Total Quizzes</div><div class="s-val">37</div><div class="s-trend" style="color:var(--accent-light);">+5 this week</div></div>
+        <div class="stat-card purple"><div class="s-ico">⚡</div><div class="s-lbl">XP Distributed</div><div class="s-val">52K</div><div class="s-trend" style="color:#d8b4fe;">Lifetime total</div></div>
+      </div>
+
+      <!-- ══ SECTION: TEACHER PERFORMANCE ══ -->
+      <div id="adm-perf">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+          <div>
+            <div style="font-size:16px;font-weight:800;letter-spacing:-0.03em;">📊 Teacher Performance Overview</div>
+            <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px;">Individual teacher stats · Ratings · Salary management</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <select class="form-control" style="width:auto;font-size:12.5px;" onchange="filterTeacherCards(this.value)">
+              <option value="">All Teachers</option>
+              <option value="excellent">Excellent (5★)</option>
+              <option value="good">Good (4★)</option>
+              <option value="average">Average (3★)</option>
+              <option value="poor">Poor (≤2★)</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="saveAllSalaries()">💾 Save Salary Changes</button>
+          </div>
+        </div>
+
+        <!-- Quick summary bar -->
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px;">
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);margin-bottom:4px;">Faculty Count</div>
+            <div style="font-size:24px;font-weight:900;color:#a5a0ff;font-family:var(--mono);">5</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);margin-bottom:4px;">Platform Avg Rating</div>
+            <div style="font-size:24px;font-weight:900;color:var(--accent-light);font-family:var(--mono);">3.8★</div>
+          </div>
+          <div style="background:rgba(45,212,160,0.07);border:1px solid rgba(45,212,160,0.2);border-radius:10px;padding:13px;text-align:center;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);margin-bottom:4px;">Top Performer</div>
+            <div style="font-size:12px;font-weight:800;color:var(--success);margin-top:5px;">Dr. Sunita Ghosh</div>
+          </div>
+          <div style="background:rgba(240,97,74,0.07);border:1px solid rgba(240,97,74,0.2);border-radius:10px;padding:13px;text-align:center;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);margin-bottom:4px;">On Probation</div>
+            <div style="font-size:24px;font-weight:900;color:var(--danger);font-family:var(--mono);">1</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);margin-bottom:4px;">Monthly Payroll</div>
+            <div style="font-size:20px;font-weight:900;color:var(--text);font-family:var(--mono);">₹2.5L</div>
+          </div>
+        </div>
+
+        <!-- ══ TEACHER CARDS ══ -->
+        <div style="display:flex;flex-direction:column;gap:16px;" id="teacher-cards">
+
+          <!-- ── CARD 1: Prof. Ravi Kumar ── -->
+          <div class="teacher-perf-card" data-grade="good" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;transition:border-color .2s;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--primary),#b0a5f8);border-radius:var(--radius-lg) 0 0 var(--radius-lg);"></div>
+            <div style="padding-left:12px;">
+              <!-- Top row -->
+              <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
+                <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,rgba(245,181,90,0.25),rgba(245,181,90,0.08));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:var(--accent-light);flex-shrink:0;">RK</div>
+                <div style="flex:1;min-width:160px;">
+                  <div style="font-size:15px;font-weight:800;letter-spacing:-0.02em;">Prof. Ravi Kumar</div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Mathematics &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="483a293e21082b2724242d2f2d662d2c3d">[email&#160;protected]</a></div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;">
+                    <span style="background:rgba(124,110,245,0.12);color:var(--primary-light);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">Sem I</span>
+                    <span style="background:rgba(124,110,245,0.12);color:var(--primary-light);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">Sem II</span>
+                    <span style="background:rgba(124,110,245,0.12);color:var(--primary-light);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">Sem III</span>
+                    <span class="badge badge-success" style="margin-left:4px;">Active</span>
+                  </div>
+                </div>
+                <!-- Star rating -->
+                <div style="text-align:right;flex-shrink:0;">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);margin-bottom:5px;">Admin Rating</div>
+                  <div style="display:flex;gap:3px;cursor:pointer;font-size:22px;justify-content:flex-end;" id="stars-rk" onclick="rateTeacher(event,'rk')" title="Click to rate">
+                    <span style="color:var(--accent-light);">★</span><span style="color:var(--accent-light);">★</span><span style="color:var(--accent-light);">★</span><span style="color:var(--accent-light);">★</span><span style="color:var(--border2);">★</span>
+                  </div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:3px;" id="rating-txt-rk">4.0 / 5.0 &nbsp;<span class="badge badge-success">Good</span></div>
+                </div>
+              </div>
+              <!-- Metrics row -->
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Student Pass %</div>
+                  <div style="font-size:20px;font-weight:800;color:var(--success);font-family:var(--mono);">78%</div>
+                  <div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:5px;overflow:hidden;"><div style="width:78%;height:100%;background:linear-gradient(90deg,var(--success),#78f7d1);border-radius:2px;"></div></div>
+                </div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Avg Quiz Score</div>
+                  <div style="font-size:20px;font-weight:800;color:#a5a0ff;font-family:var(--mono);">82%</div>
+                  <div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:5px;overflow:hidden;"><div style="width:82%;height:100%;background:linear-gradient(90deg,var(--primary),#b0a5f8);border-radius:2px;"></div></div>
+                </div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Quizzes Created</div>
+                  <div style="font-size:20px;font-weight:800;color:var(--accent-light);font-family:var(--mono);">18</div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">This semester</div>
+                </div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Students</div>
+                  <div style="font-size:20px;font-weight:800;color:var(--text);font-family:var(--mono);">112</div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Across 3 sems</div>
+                </div>
+              </div>
+              <!-- Salary row -->
+              <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:12px 16px;border:1px solid var(--border);flex-wrap:wrap;gap:10px;">
+                <div style="font-size:12.5px;color:var(--text-muted);font-weight:500;">💰 Monthly Salary</div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button class="inc-dec-btn dec" onclick="adjustSalary('rk',-1)" title="Decrement ₹2,000">−</button>
+                  <div style="text-align:center;min-width:70px;">
+                    <div style="font-size:16px;font-weight:800;font-family:var(--mono);letter-spacing:-0.02em;" id="sal-rk">₹52,000</div>
+                    <div style="font-size:10px;color:var(--text-faint);">per month</div>
+                  </div>
+                  <button class="inc-dec-btn inc" onclick="adjustSalary('rk',1)" title="Increment ₹2,000">+</button>
+                  <div style="font-size:11px;font-weight:700;font-family:var(--mono);min-width:90px;" id="sal-chg-rk"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── CARD 2: Dr. Sunita Ghosh ── -->
+          <div class="teacher-perf-card" data-grade="excellent" style="background:var(--surface);border:1px solid rgba(45,212,160,0.25);border-radius:var(--radius-lg);padding:22px;transition:border-color .2s;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--success),#78f7d1);border-radius:var(--radius-lg) 0 0 var(--radius-lg);"></div>
+            <div style="padding-left:12px;">
+              <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
+                <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,rgba(45,212,160,0.25),rgba(45,212,160,0.08));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#5ef5cc;flex-shrink:0;">SG</div>
+                <div style="flex:1;min-width:160px;">
+                  <div style="font-size:15px;font-weight:800;letter-spacing:-0.02em;">Dr. Sunita Ghosh</div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Science &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1467617a7d607554777b78787173713a717061">[email&#160;protected]</a></div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;">
+                    <span style="background:rgba(45,212,160,0.12);color:#5ef5cc;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">Sem I</span>
+                    <span style="background:rgba(45,212,160,0.12);color:#5ef5cc;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">Sem IV</span>
+                    <span class="badge badge-success" style="margin-left:4px;">Active</span>
+                    <span style="background:rgba(45,212,160,0.15);color:#5ef5cc;border:1px solid rgba(45,212,160,0.3);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700;">🏆 Top Performer</span>
+                  </div>
+                </div>
+                <div style="text-align:right;flex-shrink:0;">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);margin-bottom:5px;">Admin Rating</div>
+                  <div style="display:flex;gap:3px;cursor:pointer;font-size:22px;justify-content:flex-end;" id="stars-sg" onclick="rateTeacher(event,'sg')">
+                    <span style="color:var(--accent-light);">★</span><span style="color:var(--accent-light);">★</span><span style="color:var(--accent-light);">★</span><span style="color:var(--accent-light);">★</span><span style="color:var(--accent-light);">★</span>
+                  </div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:3px;" id="rating-txt-sg">5.0 / 5.0 &nbsp;<span class="badge badge-success" style="background:rgba(45,212,160,0.18);color:#5ef5cc;">Excellent</span></div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Student Pass %</div><div style="font-size:20px;font-weight:800;color:var(--success);font-family:var(--mono);">92%</div><div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:5px;overflow:hidden;"><div style="width:92%;height:100%;background:linear-gradient(90deg,var(--success),#78f7d1);border-radius:2px;"></div></div></div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Avg Quiz Score</div><div style="font-size:20px;font-weight:800;color:#a5a0ff;font-family:var(--mono);">90%</div><div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:5px;overflow:hidden;"><div style="width:90%;height:100%;background:linear-gradient(90deg,var(--primary),#b0a5f8);border-radius:2px;"></div></div></div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Quizzes Created</div><div style="font-size:20px;font-weight:800;color:var(--accent-light);font-family:var(--mono);">22</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">This semester</div></div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Students</div><div style="font-size:20px;font-weight:800;color:var(--text);font-family:var(--mono);">88</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Across 2 sems</div></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:12px 16px;border:1px solid var(--border);flex-wrap:wrap;gap:10px;">
+                <div style="font-size:12.5px;color:var(--text-muted);font-weight:500;">💰 Monthly Salary</div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button class="inc-dec-btn dec" onclick="adjustSalary('sg',-1)">−</button>
+                  <div style="text-align:center;min-width:70px;"><div style="font-size:16px;font-weight:800;font-family:var(--mono);" id="sal-sg">₹68,000</div><div style="font-size:10px;color:var(--text-faint);">per month</div></div>
+                  <button class="inc-dec-btn inc" onclick="adjustSalary('sg',1)">+</button>
+                  <div style="font-size:11px;font-weight:700;font-family:var(--mono);min-width:90px;" id="sal-chg-sg"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── CARD 3: Mr. Amit Mishra ── -->
+          <div class="teacher-perf-card" data-grade="average" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;transition:border-color .2s;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--warning),#fcd34d);border-radius:var(--radius-lg) 0 0 var(--radius-lg);"></div>
+            <div style="padding-left:12px;">
+              <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
+                <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,rgba(86,200,240,0.22),rgba(86,200,240,0.07));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#80d9f8;flex-shrink:0;">AM</div>
+                <div style="flex:1;min-width:160px;">
+                  <div style="font-size:15px;font-weight:800;letter-spacing:-0.02em;">Mr. Amit Mishra</div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">English &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c8a9a5a1bc88aba7a4a4adafade6adacbd">[email&#160;protected]</a></div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;">
+                    <span style="background:rgba(86,200,240,0.10);color:#80d9f8;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">Sem II</span>
+                    <span style="background:rgba(86,200,240,0.10);color:#80d9f8;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">Sem III</span>
+                    <span class="badge badge-warning" style="margin-left:4px;">On Leave</span>
+                  </div>
+                </div>
+                <div style="text-align:right;flex-shrink:0;">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);margin-bottom:5px;">Admin Rating</div>
+                  <div style="display:flex;gap:3px;cursor:pointer;font-size:22px;justify-content:flex-end;" id="stars-am" onclick="rateTeacher(event,'am')">
+                    <span style="color:var(--accent-light);">★</span><span style="color:var(--accent-light);">★</span><span style="color:var(--accent-light);">★</span><span style="color:var(--border2);">★</span><span style="color:var(--border2);">★</span>
+                  </div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:3px;" id="rating-txt-am">3.0 / 5.0 &nbsp;<span class="badge badge-warning">Average</span></div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Student Pass %</div><div style="font-size:20px;font-weight:800;color:var(--warning);font-family:var(--mono);">61%</div><div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:5px;overflow:hidden;"><div style="width:61%;height:100%;background:linear-gradient(90deg,var(--warning),#fcd34d);border-radius:2px;"></div></div></div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Avg Quiz Score</div><div style="font-size:20px;font-weight:800;color:var(--warning);font-family:var(--mono);">64%</div><div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:5px;overflow:hidden;"><div style="width:64%;height:100%;background:linear-gradient(90deg,var(--warning),#fcd34d);border-radius:2px;"></div></div></div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Quizzes Created</div><div style="font-size:20px;font-weight:800;color:var(--accent-light);font-family:var(--mono);">7</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">This semester</div></div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Students</div><div style="font-size:20px;font-weight:800;color:var(--text);font-family:var(--mono);">60</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Across 2 sems</div></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:12px 16px;border:1px solid var(--border);flex-wrap:wrap;gap:10px;">
+                <div style="font-size:12.5px;color:var(--text-muted);font-weight:500;">💰 Monthly Salary</div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button class="inc-dec-btn dec" onclick="adjustSalary('am',-1)">−</button>
+                  <div style="text-align:center;min-width:70px;"><div style="font-size:16px;font-weight:800;font-family:var(--mono);" id="sal-am">₹44,000</div><div style="font-size:10px;color:var(--text-faint);">per month</div></div>
+                  <button class="inc-dec-btn inc" onclick="adjustSalary('am',1)">+</button>
+                  <div style="font-size:11px;font-weight:700;font-family:var(--mono);min-width:90px;" id="sal-chg-am"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── CARD 4: Ms. Neha Pandey ── -->
+          <div class="teacher-perf-card" data-grade="good" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;transition:border-color .2s;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--primary),#b0a5f8);border-radius:var(--radius-lg) 0 0 var(--radius-lg);"></div>
+            <div style="padding-left:12px;">
+              <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
+                <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,rgba(240,97,74,0.22),rgba(240,97,74,0.07));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#f5806b;flex-shrink:0;">NP</div>
+                <div style="flex:1;min-width:160px;">
+                  <div style="font-size:15px;font-weight:800;letter-spacing:-0.02em;">Ms. Neha Pandey</div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">History &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="335d565b5273505c5f5f5654561d565746">[email&#160;protected]</a></div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;">
+                    <span style="background:rgba(240,97,74,0.10);color:#f5806b;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">Sem V</span>
+                    <span style="background:rgba(240,97,74,0.10);color:#f5806b;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">Sem VI</span>
+                    <span class="badge badge-success" style="margin-left:4px;">Active</span>
+                  </div>
+                </div>
+                <div style="text-align:right;flex-shrink:0;">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);margin-bottom:5px;">Admin Rating</div>
+                  <div style="display:flex;gap:3px;cursor:pointer;font-size:22px;justify-content:flex-end;" id="stars-np" onclick="rateTeacher(event,'np')">
+                    <span style="color:var(--accent-light);">★</span><span style="color:var(--accent-light);">★</span><span style="color:var(--accent-light);">★</span><span style="color:var(--accent-light);">★</span><span style="color:var(--border2);">★</span>
+                  </div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:3px;" id="rating-txt-np">4.0 / 5.0 &nbsp;<span class="badge badge-success">Good</span></div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Student Pass %</div><div style="font-size:20px;font-weight:800;color:var(--success);font-family:var(--mono);">84%</div><div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:5px;overflow:hidden;"><div style="width:84%;height:100%;background:linear-gradient(90deg,var(--success),#78f7d1);border-radius:2px;"></div></div></div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Avg Quiz Score</div><div style="font-size:20px;font-weight:800;color:#a5a0ff;font-family:var(--mono);">79%</div><div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:5px;overflow:hidden;"><div style="width:79%;height:100%;background:linear-gradient(90deg,var(--primary),#b0a5f8);border-radius:2px;"></div></div></div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Quizzes Created</div><div style="font-size:20px;font-weight:800;color:var(--accent-light);font-family:var(--mono);">10</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">This semester</div></div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Students</div><div style="font-size:20px;font-weight:800;color:var(--text);font-family:var(--mono);">76</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Across 2 sems</div></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:12px 16px;border:1px solid var(--border);flex-wrap:wrap;gap:10px;">
+                <div style="font-size:12.5px;color:var(--text-muted);font-weight:500;">💰 Monthly Salary</div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button class="inc-dec-btn dec" onclick="adjustSalary('np',-1)">−</button>
+                  <div style="text-align:center;min-width:70px;"><div style="font-size:16px;font-weight:800;font-family:var(--mono);" id="sal-np">₹48,000</div><div style="font-size:10px;color:var(--text-faint);">per month</div></div>
+                  <button class="inc-dec-btn inc" onclick="adjustSalary('np',1)">+</button>
+                  <div style="font-size:11px;font-weight:700;font-family:var(--mono);min-width:90px;" id="sal-chg-np"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── CARD 5: Mr. Pankaj Jain ── -->
+          <div class="teacher-perf-card" data-grade="poor" style="background:var(--surface);border:1px solid rgba(240,97,74,0.2);border-radius:var(--radius-lg);padding:22px;transition:border-color .2s;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--danger),#f87171);border-radius:var(--radius-lg) 0 0 var(--radius-lg);"></div>
+            <div style="padding-left:12px;">
+              <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
+                <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,rgba(168,85,247,0.22),rgba(168,85,247,0.07));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#d8b4fe;flex-shrink:0;">PJ</div>
+                <div style="flex:1;min-width:160px;">
+                  <div style="font-size:15px;font-weight:800;letter-spacing:-0.02em;">Mr. Pankaj Jain</div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Computer Science &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7000111e1b111a30131f1c1c1517155e151405">[email&#160;protected]</a></div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;">
+                    <span style="background:rgba(168,85,247,0.10);color:#d8b4fe;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">Sem IV</span>
+                    <span style="background:rgba(168,85,247,0.10);color:#d8b4fe;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">Sem V</span>
+                    <span style="background:rgba(168,85,247,0.10);color:#d8b4fe;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">Sem VI</span>
+                    <span class="badge badge-danger" style="margin-left:4px;">Probation</span>
+                  </div>
+                </div>
+                <div style="text-align:right;flex-shrink:0;">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);margin-bottom:5px;">Admin Rating</div>
+                  <div style="display:flex;gap:3px;cursor:pointer;font-size:22px;justify-content:flex-end;" id="stars-pj" onclick="rateTeacher(event,'pj')">
+                    <span style="color:var(--accent-light);">★</span><span style="color:var(--accent-light);">★</span><span style="color:var(--border2);">★</span><span style="color:var(--border2);">★</span><span style="color:var(--border2);">★</span>
+                  </div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:3px;" id="rating-txt-pj">2.0 / 5.0 &nbsp;<span class="badge badge-danger">Poor</span></div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Student Pass %</div><div style="font-size:20px;font-weight:800;color:var(--danger);font-family:var(--mono);">42%</div><div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:5px;overflow:hidden;"><div style="width:42%;height:100%;background:linear-gradient(90deg,var(--danger),#f87171);border-radius:2px;"></div></div></div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Avg Quiz Score</div><div style="font-size:20px;font-weight:800;color:var(--danger);font-family:var(--mono);">46%</div><div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:5px;overflow:hidden;"><div style="width:46%;height:100%;background:linear-gradient(90deg,var(--danger),#f87171);border-radius:2px;"></div></div></div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Quizzes Created</div><div style="font-size:20px;font-weight:800;color:var(--accent-light);font-family:var(--mono);">4</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">This semester</div></div>
+                <div style="background:var(--surface2);border-radius:8px;padding:11px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:4px;">Students</div><div style="font-size:20px;font-weight:800;color:var(--text);font-family:var(--mono);">72</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Across 3 sems</div></div>
+              </div>
+              <!-- Warning notice for poor performer -->
+              <div style="background:rgba(240,97,74,0.07);border:1px solid rgba(240,97,74,0.2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:#f5806b;display:flex;align-items:center;gap:8px;">
+                ⚠️ <strong>Improvement Notice:</strong> Student pass rate below 60%. Performance review required this semester.
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:12px 16px;border:1px solid var(--border);flex-wrap:wrap;gap:10px;">
+                <div style="font-size:12.5px;color:var(--text-muted);font-weight:500;">💰 Monthly Salary</div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button class="inc-dec-btn dec" onclick="adjustSalary('pj',-1)">−</button>
+                  <div style="text-align:center;min-width:70px;"><div style="font-size:16px;font-weight:800;font-family:var(--mono);" id="sal-pj">₹38,000</div><div style="font-size:10px;color:var(--text-faint);">per month</div></div>
+                  <button class="inc-dec-btn inc" onclick="adjustSalary('pj',1)">+</button>
+                  <div style="font-size:11px;font-weight:700;font-family:var(--mono);min-width:90px;" id="sal-chg-pj"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end teacher-cards -->
+      </div><!-- end adm-perf -->
+
+      <!-- ══ SECTION: QUIZZES ══ -->
+      <div id="adm-quizzes" class="hidden">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-0.03em;margin-bottom:18px;">📝 Quiz Management</div>
+        <div class="card">
+          <table class="data-table">
+            <thead><tr><th>Quiz Title</th><th>Category</th><th>Subject</th><th>Questions</th><th>XP Value</th><th>Author</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td><strong>DSA Fundamentals</strong></td><td><span class="badge badge-primary">Coding</span></td><td>DSA</td><td>12</td><td style="color:var(--accent-light);font-family:var(--mono);font-weight:700;">+300 XP</td><td>Ravi Kumar</td><td><span class="badge badge-success">Active</span></td><td><button class="btn btn-sm btn-ghost">Edit</button> <button class="btn btn-sm btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Python OOP</strong></td><td><span class="badge badge-primary">Coding</span></td><td>Python</td><td>10</td><td style="color:var(--accent-light);font-family:var(--mono);font-weight:700;">+250 XP</td><td>Sunita Ghosh</td><td><span class="badge badge-success">Active</span></td><td><button class="btn btn-sm btn-ghost">Edit</button> <button class="btn btn-sm btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Current Affairs Mar 2026</strong></td><td><span class="badge badge-success">GK</span></td><td>Current Affairs</td><td>15</td><td style="color:var(--accent-light);font-family:var(--mono);font-weight:700;">+200 XP</td><td>Admin</td><td><span class="badge badge-success">Active</span></td><td><button class="btn btn-sm btn-ghost">Edit</button> <button class="btn btn-sm btn-danger">Delete</button></td></tr>
+              <tr><td><strong>C++ STL</strong></td><td><span class="badge badge-primary">Coding</span></td><td>C++</td><td>10</td><td style="color:var(--accent-light);font-family:var(--mono);font-weight:700;">+250 XP</td><td>Pankaj Jain</td><td><span class="badge badge-warning">Draft</span></td><td><button class="btn btn-sm btn-ghost">Edit</button> <button class="btn btn-sm btn-danger">Delete</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ SECTION: STUDENTS ══ -->
+      <div id="adm-students" class="hidden">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-0.03em;margin-bottom:18px;">👥 Student Management</div>
+        <div class="card">
+          <div style="display:flex;gap:9px;margin-bottom:14px;">
+            <input class="form-control" style="max-width:260px;" placeholder="Search students..."/>
+            <select class="form-control" style="width:auto;"><option>All Semesters</option><option>Sem I</option><option>Sem II</option><option>Sem III</option></select>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Roll No.</th><th>Semester</th><th>Avg Score</th><th>XP</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Arjun Sharma</strong></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/001</td><td>Sem I</td><td style="color:var(--success);font-weight:700;">91%</td><td style="font-family:var(--mono);color:var(--accent-light);">3,940</td><td><span class="badge badge-success">Active</span></td><td><button class="btn btn-sm btn-ghost">View</button> <button class="btn btn-sm btn-danger">Remove</button></td></tr>
+              <tr><td><strong>Priya Mehta</strong></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/002</td><td>Sem I</td><td style="color:var(--success);font-weight:700;">87%</td><td style="font-family:var(--mono);color:var(--accent-light);">2,875</td><td><span class="badge badge-success">Active</span></td><td><button class="btn btn-sm btn-ghost">View</button> <button class="btn btn-sm btn-danger">Remove</button></td></tr>
+              <tr><td><strong>Karan Bose</strong></td><td style="font-family:var(--mono);font-size:12px;">2024/CS/005</td><td>Sem I</td><td style="color:var(--danger);font-weight:700;">48%</td><td style="font-family:var(--mono);color:var(--text-muted);">310</td><td><span class="badge badge-danger">At Risk</span></td><td><button class="btn btn-sm btn-ghost">View</button> <button class="btn btn-sm btn-danger">Remove</button></td></tr>
+              <tr><td><strong>Suresh Pillai</strong></td><td style="font-family:var(--mono);font-size:12px;">2020/CS/001</td><td>Sem VI</td><td style="color:var(--success);font-weight:700;">96%</td><td style="font-family:var(--mono);color:var(--accent-light);">6,400</td><td><span class="badge badge-success">Active</span></td><td><button class="btn btn-sm btn-ghost">View</button> <button class="btn btn-sm btn-danger">Remove</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ SECTION: XP SETTINGS ══ -->
+      <div id="adm-xp" class="hidden">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-0.03em;margin-bottom:18px;">⚡ XP Settings</div>
+        <div class="card" style="max-width:460px;">
+          <div class="form-group"><label class="form-label">XP per correct answer</label><input class="form-control" type="number" value="25"/></div>
+          <div class="form-group"><label class="form-label">Speed bonus (answer in &lt;10s)</label><input class="form-control" type="number" value="5"/></div>
+          <div class="form-group"><label class="form-label">Perfect score bonus</label><input class="form-control" type="number" value="50"/></div>
+          <div class="form-group"><label class="form-label">Daily streak bonus</label><input class="form-control" type="number" value="10"/></div>
+          <div class="form-group"><label class="form-label">Question contribution (on approval)</label><input class="form-control" type="number" value="30"/></div>
+          <div class="form-group"><label class="form-label">First rank in quiz bonus</label><input class="form-control" type="number" value="100"/></div>
+          <button class="btn btn-primary">Save XP Rules</button>
+        </div>
+      </div>
+
+      <!-- ══ SECTION: PLATFORM SETTINGS ══ -->
+      <div id="adm-settings" class="hidden">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-0.03em;margin-bottom:18px;">⚙️ Platform Settings</div>
+        <div class="card" style="max-width:440px;">
+          <div class="form-group"><label class="form-label">Platform Name</label><input class="form-control" value="QuizArena — Online Quiz System"/></div>
+          <div class="form-group"><label class="form-label">Default Quiz Duration (minutes)</label><input class="form-control" type="number" value="15"/></div>
+          <div class="form-group"><label class="form-label">Max Questions Per Quiz</label><input class="form-control" type="number" value="20"/></div>
+          <div class="form-group"><label class="form-label">Strict Mode (No Tab Switch)</label><select class="form-control"><option>Enabled — Recommended</option><option>Disabled</option></select></div>
+          <div class="form-group"><label class="form-label">Allow Student Question Submissions</label><select class="form-control"><option>Yes</option><option>No</option></select></div>
+          <div class="form-group"><label class="form-label">Salary Increment Step (₹)</label><input class="form-control" type="number" value="2000"/></div>
+          <button class="btn btn-primary">Save Settings</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════
+     MULTIPLAYER ROOM
+════════════════════════════ -->
+<div id="page-multiplayer" class="page">
+  <div class="page-back-row">
+    <button class="back-btn" onclick="goBack()" data-testid="multiplayer-back-btn">← Back</button>
+  </div>
+  <div class="mp-wrap">
+
+    <!-- LOBBY (create / join) -->
+    <div id="mp-lobby">
+      <div class="mp-hero">
+        <h1>🎮 Multiplayer Arena</h1>
+        <p>Create a private room or join with a code. Compete in real-time, climb the live leaderboard, and chat with classmates.</p>
+      </div>
+      <div class="mp-grid">
+        <div class="mp-card">
+          <h3>🚀 Create Room</h3>
+          <div class="form-group"><label class="form-label">Your Display Name</label><input class="form-control" id="mp-host-name" placeholder="Enter your name" data-testid="mp-host-name-input"/></div>
+          <div class="form-group"><label class="form-label">Subject</label>
+            <select class="form-control" id="mp-subject">
+              <option>DSA — Quiz</option><option>Python — Quiz</option><option>C++ — Quiz</option><option>Current Affairs — Quiz</option><option>Mixed — Quiz</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Number of Questions</label>
+            <select class="form-control" id="mp-q-count"><option value="5">5 Questions</option><option value="8">8 Questions</option></select>
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="mpCreateRoom()" data-testid="mp-create-room-btn">Create Room →</button>
+        </div>
+        <div class="mp-card">
+          <h3>🔑 Join Room</h3>
+          <div class="form-group"><label class="form-label">Your Display Name</label><input class="form-control" id="mp-join-name" placeholder="Enter your name" data-testid="mp-join-name-input"/></div>
+          <div class="form-group"><label class="form-label">Room Code</label><input class="form-control" id="mp-join-code" placeholder="6-digit code" style="text-transform:uppercase;font-family:var(--mono);letter-spacing:0.1em;" maxlength="6" data-testid="mp-join-code-input"/></div>
+          <button class="btn btn-outline" style="width:100%;justify-content:center;" onclick="mpJoinRoom()" data-testid="mp-join-room-btn">Join Room →</button>
+          <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border);">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);margin-bottom:10px;">Active Rooms</div>
+            <div id="mp-active-rooms" style="display:flex;flex-direction:column;gap:6px;max-height:140px;overflow-y:auto;">
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:14px;">No active rooms. <a href="#" onclick="mpRefreshRooms();return false;" style="color:var(--primary-light);">Refresh</a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROOM (lobby + live game) -->
+    <div id="mp-room" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);margin-bottom:5px;">Room Code</div>
+          <div class="mp-room-pill" data-testid="mp-room-code-display">🎯 <span id="mp-room-code">------</span></div>
+          <span class="mp-status-pill lobby" id="mp-room-status" style="margin-left:8px;">LOBBY</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="mpCopyCode()" data-testid="mp-copy-code-btn">📋 Copy Code</button>
+          <button class="btn btn-danger btn-sm" onclick="mpLeaveRoom()" data-testid="mp-leave-room-btn">🚪 Leave</button>
+        </div>
+      </div>
+
+      <div class="mp-grid">
+        <div class="mp-card">
+          <h3>👥 Players (<span id="mp-player-count">0</span>)</h3>
+          <div class="mp-players-list" id="mp-players-list" data-testid="mp-players-list"></div>
+          <div id="mp-host-controls" class="hidden" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+            <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="mpStartGame()" data-testid="mp-start-game-btn">▶ Start Game</button>
+            <div style="font-size:11.5px;color:var(--text-muted);text-align:center;margin-top:8px;">You are the host. Wait for players to join, then start.</div>
+          </div>
+          <div id="mp-waiting-msg" class="hidden" style="margin-top:14px;padding:12px;background:var(--surface2);border-radius:8px;text-align:center;font-size:12.5px;color:var(--text-muted);">⏳ Waiting for host to start the game...</div>
+        </div>
+        <div class="mp-card">
+          <h3>💬 Chat</h3>
+          <div class="mp-chat" id="mp-chat" data-testid="mp-chat-box"></div>
+          <div class="mp-chat-input">
+            <input class="form-control" id="mp-chat-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter') mpSendChat()" data-testid="mp-chat-input"/>
+            <button class="btn btn-primary btn-sm" onclick="mpSendChat()" data-testid="mp-chat-send-btn">Send</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live game area -->
+      <div id="mp-game-area" class="hidden">
+        <div class="mp-q-card">
+          <div class="mp-q-progress" id="mp-q-progress">Question 1 of 5</div>
+          <div class="mp-q-text" id="mp-q-text" data-testid="mp-question-text">—</div>
+          <div class="mp-options" id="mp-options" data-testid="mp-options-area"></div>
+          <div id="mp-answer-feedback" style="margin-top:18px;font-size:14px;font-weight:700;min-height:22px;"></div>
+        </div>
+        <div class="mp-card">
+          <h3>🏆 Live Leaderboard</h3>
+          <div id="mp-leaderboard" data-testid="mp-leaderboard"></div>
+        </div>
+      </div>
+
+      <!-- Game over -->
+      <div id="mp-gameover" class="hidden" style="margin-top:18px;">
+        <div class="mp-card" style="text-align:center;">
+          <div style="font-size:48px;margin-bottom:10px;">🎉</div>
+          <h3 style="font-size:22px;margin-bottom:8px;">Game Over!</h3>
+          <p style="color:var(--text-muted);margin-bottom:18px;">Final standings below</p>
+          <div id="mp-final-leaderboard" data-testid="mp-final-leaderboard" style="text-align:left;max-width:480px;margin:0 auto 18px;"></div>
+          <button class="btn btn-primary" onclick="mpLeaveRoom()" data-testid="mp-back-to-lobby-btn">← Back to Lobby</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+/* ════════════════════════════
+   STATE
+════════════════════════════ */
+var currentRole = 'student';
+var quizActive = false;
+var timerInterval = null;
+var timeLeft = 872;
+var userXP = 1240;
+var currentQ = 3;
+
+/* navigation history stack (for back button) */
+var pageHistory = [];
+
+/* ════════════════════════════
+   PAGE NAVIGATION — single source of truth
+════════════════════════════ */
+function showPage(id, skipHistory) {
+  // Track previous page in history
+  if (!skipHistory) {
+    var current = document.querySelector('.page.active');
+    if (current && current.id !== id) {
+      pageHistory.push(current.id);
+      if (pageHistory.length > 30) pageHistory.shift();
+    }
+  }
+  // Hide ALL pages
+  var pages = document.querySelectorAll('.page');
+  for (var i = 0; i < pages.length; i++) {
+    pages[i].classList.remove('active');
+  }
+  // Show target page
+  var target = document.getElementById(id);
+  if (target) target.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function goBack() {
+  if (pageHistory.length === 0) {
+    // Fallback: go to dashboard
+    showPage('page-dash', true);
+    return;
+  }
+  var prev = pageHistory.pop();
+  // Don't go back to landing/auth from logged-in screens
+  if (prev === 'page-landing' || prev === 'page-auth') {
+    showPage('page-dash', true);
+    return;
+  }
+  showPage(prev, true);
+  if (prev === 'page-dash') updateDashView();
+}
+
+function goDash()    { showPage('page-dash');    updateDashView(); }
+function goSubjects(){ showPage('page-subject'); }
+function goPoints()  { showPage('page-points');  }
+function goAddQ()    { showPage('page-addq');     updateAddQRole(); }
+function goRank()    { showPage('page-rank');     }
+function goAdmin()   { showPage('page-admin');    }
+function goMultiplayer() { showPage('page-multiplayer'); mpEnterLobby(); }
+
+function goLanding() {
+  pageHistory = [];
+  document.getElementById('main-nav').classList.add('hidden');
+  showPage('page-landing', true);
+}
+
+function goAuth(tab) {
+  pageHistory = [];
+  document.getElementById('main-nav').classList.add('hidden');
+  showPage('page-auth', true);
+  switchTab(tab || 'login', document.querySelectorAll('.auth-tab')[tab === 'signup' ? 1 : 0]);
+}
+
+/* ════════════════════════════
+   AUTH
+════════════════════════════ */
+function showAuthPage(tab) { goAuth(tab); }
+
+function switchTab(tab, el) {
+  var tabs = document.querySelectorAll('.auth-tab');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  if (el) el.classList.add('active');
+  var login = document.getElementById('auth-login');
+  var signup = document.getElementById('auth-signup');
+  if (tab === 'login')  { login.classList.remove('hidden');  signup.classList.add('hidden'); }
+  else                  { signup.classList.remove('hidden'); login.classList.add('hidden'); }
+}
+
+async function apiRequest(path, method, body) {
+  var res = await fetch(path, {
+    method: method || 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  var data = await res.json().catch(function() { return {}; });
+  if (!res.ok) {
+    throw new Error(data.message || 'Request failed');
+  }
+  return data;
+}
+
+async function doSignup() {
+  var firstName = (document.getElementById('signup-first-name').value || '').trim();
+  var lastName = (document.getElementById('signup-last-name').value || '').trim();
+  var email = (document.getElementById('signup-email').value || '').trim().toLowerCase();
+  var password = document.getElementById('signup-pass').value || '';
+  var role = document.getElementById('signup-role').value || 'student';
+
+  if (!firstName || !email || !password) {
+    xpToast('Please fill name, email and password', 'var(--danger)');
+    return;
+  }
+  if (password.length < 6) {
+    xpToast('Password must be at least 6 characters', 'var(--danger)');
+    return;
+  }
+
+  var fullName = (firstName + ' ' + lastName).trim();
+
+  try {
+    await apiRequest('/api/auth/register', 'POST', {
+      name: fullName,
+      email: email,
+      password: password,
+      role: role
+    });
+    xpToast('✓ Account created. Please sign in.', 'var(--success)');
+    switchTab('login', document.querySelectorAll('.auth-tab')[0]);
+    document.getElementById('login-email').value = email;
+    document.getElementById('login-pass').value = password;
+    document.getElementById('login-role').value = role;
+  } catch (err) {
+    xpToast('Signup failed: ' + err.message, 'var(--danger)');
+  }
+}
+
+function doLogin() {
+  var role = document.getElementById('login-role').value;
+  currentRole = role;
+  var names   = { student: 'Arjun Sharma', teacher: 'Prof. Ravi Kumar', admin: 'Administrator' };
+  var initials = { student: 'AS', teacher: 'RK', admin: 'AD' };
+
+  // Show nav
+  document.getElementById('main-nav').classList.remove('hidden');
+  document.getElementById('nav-user-name').textContent = names[role];
+  document.getElementById('nav-avatar').textContent = initials[role];
+
+  // Admin-only links
+  if (role === 'admin') {
+    document.getElementById('nav-admin').classList.remove('hidden');
+    document.getElementById('sb-admin-link').classList.remove('hidden');
+    var sb2 = document.getElementById('sb-admin-link2');
+    if (sb2) sb2.classList.remove('hidden');
+  }
+
+  // Role label
+  var lbl = role === 'teacher' ? 'Teacher Portal' : role === 'admin' ? 'Admin Console' : 'Student Portal';
+  document.getElementById('role-label').textContent = lbl;
+  var lbl2 = document.getElementById('role-label2');
+  if (lbl2) lbl2.textContent = lbl;
+
+  if (role === 'admin') {
+    goAdmin();
+  } else {
+    goDash();
+  }
+  pageHistory = []; // reset after login
+  xpToast('✓ Signed in — +10 XP daily bonus', 'var(--success)');
+}
+
+function doLogout() {
+  stopTimer();
+  quizActive = false;
+  currentRole = 'student';
+  // Hide nav
+  document.getElementById('main-nav').classList.add('hidden');
+  document.getElementById('nav-admin').classList.add('hidden');
+  document.getElementById('sb-admin-link').classList.add('hidden');
+  goLanding();
+}
+
+/* ════════════════════════════
+   DASHBOARD VIEW SWITCHER
+════════════════════════════ */
+function updateDashView() {
+  var sv = document.getElementById('view-student');
+  var tv = document.getElementById('view-teacher');
+  if (!sv || !tv) return;
+
+  if (currentRole === 'teacher') {
+    sv.classList.add('hidden');
+    tv.classList.remove('hidden');
+    var tw = document.getElementById('teacher-welcome');
+    if (tw) tw.textContent = 'Welcome back, Prof. Ravi Kumar 👋';
+  } else {
+    tv.classList.add('hidden');
+    sv.classList.remove('hidden');
+    var dw = document.getElementById('dash-welcome');
+    if (dw) dw.textContent = 'Welcome back, ' + (currentRole === 'admin' ? 'Administrator' : 'Arjun') + ' 👋';
+  }
+}
+
+function updateAddQRole() {
+  var lbl = document.getElementById('role-label2');
+  if (lbl) lbl.textContent = currentRole === 'teacher' ? 'Teacher Portal' : currentRole === 'admin' ? 'Admin Console' : 'Student Portal';
+}
+
+/* ════════════════════════════
+   CLASS TABS (Teacher Dashboard)
+════════════════════════════ */
+function switchClass(cls) {
+  var classes = ['10a', '10b', '11a', '11b'];
+  for (var i = 0; i < classes.length; i++) {
+    document.getElementById('class-' + classes[i]).classList.add('hidden');
+    var btn = document.getElementById('ctab-' + classes[i]);
+    btn.className = 'btn btn-ghost btn-sm';
+  }
+  document.getElementById('class-' + cls).classList.remove('hidden');
+  document.getElementById('ctab-' + cls).className = 'btn btn-primary btn-sm';
+}
+
+function filterStudents(val, cls) {
+  var rows = document.querySelectorAll('#t-' + cls + ' tbody tr');
+  for (var i = 0; i < rows.length; i++) {
+    var score = parseInt(rows[i].getAttribute('data-score') || '100');
+    if (val === 'top')  rows[i].style.display = score >= 80 ? '' : 'none';
+    else if (val === 'risk') rows[i].style.display = score < 60  ? '' : 'none';
+    else rows[i].style.display = '';
+  }
+}
+
+/* ════════════════════════════
+   SUBJECT SELECTOR
+════════════════════════════ */
+function switchCat(cat) {
+  document.getElementById('subj-coding').classList.toggle('hidden', cat !== 'coding');
+  document.getElementById('subj-gk').classList.toggle('hidden',     cat !== 'gk');
+  document.getElementById('cat-coding').className = cat === 'coding' ? 'cat-tab active' : 'cat-tab';
+  document.getElementById('cat-gk').className     = cat === 'gk'     ? 'cat-tab active' : 'cat-tab';
+}
+
+function launchQuiz(subject, meta) {
+  document.getElementById('quiz-subject-title').textContent = subject + ' — Quiz';
+  document.getElementById('quiz-subject-meta').textContent  = meta || '10 Questions · 15 Min · Up to +250 XP';
+  document.getElementById('q-subject-badge').textContent    = subject;
+  var rs = document.getElementById('result-subject');
+  if (rs) rs.textContent = subject + ' — Quiz';
+  startQuiz();
+}
+
+/* ════════════════════════════
+   QUIZ LOGIC
+════════════════════════════ */
+function startQuiz() {
+  showPage('page-quiz');
+  quizActive = true;
+  currentQ = 3;
+  timeLeft = 872;
+  startTimer();
+  attachLockEvents();
+  setTimeout(function() { xpToast('⚡ Speed bonus active — answer quickly', 'var(--accent-light)'); }, 900);
+}
+
+function attachLockEvents() {
+  window.onblur = function() {
+    if (quizActive) document.getElementById('lock-overlay').classList.remove('hidden');
+  };
+}
+
+function resumeQuiz() {
+  document.getElementById('lock-overlay').classList.add('hidden');
+  window.focus();
+}
+
+function startTimer() {
+  stopTimer();
+  timerInterval = setInterval(function() {
+    timeLeft--;
+    if (timeLeft <= 0) { stopTimer(); showResult(); return; }
+    var m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    var s = (timeLeft % 60).toString().padStart(2, '0');
+    var el = document.getElementById('timer');
+    if (el) {
+      el.textContent = m + ':' + s;
+      el.classList.toggle('urgent', timeLeft <= 60);
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  quizActive = false;
+  window.onblur = null;
+}
+
+function selectOpt(el) {
+  var opts = document.querySelectorAll('.option');
+  for (var i = 0; i < opts.length; i++) opts[i].classList.remove('selected');
+  el.classList.add('selected');
+  xpToast('⚡ +5 Speed XP!', 'var(--accent-light)');
+}
+
+function nextQ() {
+  if (currentQ < 10) {
+    var bubbles = document.querySelectorAll('.q-bubble');
+    bubbles[currentQ - 1].classList.add('answered');
+    bubbles[currentQ - 1].classList.remove('current');
+    currentQ++;
+    bubbles[currentQ - 1].classList.add('current');
+    document.getElementById('q-progress').style.width = ((currentQ - 1) / 10 * 100) + '%';
+    xpToast('✓ +25 XP — correct answer!', 'var(--success)');
+  }
+  var opts = document.querySelectorAll('.option');
+  for (var i = 0; i < opts.length; i++) opts[i].classList.remove('selected');
+}
+
+function showResult() {
+  stopTimer();
+  userXP += 180;
+  var nxp = document.getElementById('nav-xp-val');
+  var sxp = document.getElementById('stat-xp');
+  var sbxp = document.getElementById('sb-xp');
+  var sbfill = document.getElementById('sb-fill');
+  if (nxp)   nxp.textContent  = userXP.toLocaleString();
+  if (sxp)   sxp.textContent  = userXP.toLocaleString();
+  if (sbxp)  sbxp.textContent = userXP.toLocaleString() + ' XP';
+  if (sbfill) sbfill.style.width = '72%';
+  showPage('page-result');
+  setTimeout(function() { xpToast('🎓 +180 XP earned!', 'var(--accent-light)'); }, 400);
+}
+
+/* ════════════════════════════
+   ADD QUESTION
+════════════════════════════ */
+function saveQuestion() {
+  var btn = event.target;
+  btn.textContent = '✓ Saved — +30 XP on approval';
+  btn.classList.add('btn-success');
+  xpToast('✓ Question submitted! +30 XP on approval', 'var(--success)');
+  setTimeout(function() { btn.textContent = 'Save Question'; btn.classList.remove('btn-success'); }, 3000);
+}
+
+/* ════════════════════════════
+   ADMIN TABS
+════════════════════════════ */
+function adminTab(id, el) {
+  var tabs  = document.querySelectorAll('.admin-tab');
+  var panes = document.querySelectorAll('.admin-pane');
+  for (var i = 0; i < tabs.length;  i++) tabs[i].classList.remove('active');
+  for (var i = 0; i < panes.length; i++) panes[i].classList.remove('active');
+  el.classList.add('active');
+  document.getElementById('admin-' + id).classList.add('active');
+}
+
+/* ════════════════════════════
+   SALARY INCREMENT / DECREMENT
+════════════════════════════ */
+var salaryData = { rk: 52000, sg: 68000, am: 44000, np: 48000, pj: 38000 };
+var salaryBase = { rk: 52000, sg: 68000, am: 44000, np: 48000, pj: 38000 };
+var STEP = 2000;
+
+function adjustSalary(id, dir) {
+  salaryData[id] = Math.max(20000, salaryData[id] + dir * STEP);
+  var el  = document.getElementById('sal-' + id);
+  var chg = document.getElementById('sal-chg-' + id);
+  var diff = salaryData[id] - salaryBase[id];
+  if (el) el.textContent = '₹' + salaryData[id].toLocaleString('en-IN');
+  if (chg) {
+    if (diff > 0)      { chg.textContent = '▲ +₹' + diff.toLocaleString('en-IN'); chg.style.color = 'var(--success)'; if(el) el.style.color = 'var(--success)'; }
+    else if (diff < 0) { chg.textContent = '▼ −₹' + Math.abs(diff).toLocaleString('en-IN'); chg.style.color = 'var(--danger)'; if(el) el.style.color = 'var(--danger)'; }
+    else               { chg.textContent = ''; if(el) el.style.color = 'var(--text)'; }
+  }
+  xpToast((dir > 0 ? '▲ Increment: ' : '▼ Decrement: ') + '₹' + salaryData[id].toLocaleString('en-IN'), dir > 0 ? 'var(--success)' : 'var(--danger)');
+}
+
+function saveAllSalaries() {
+  for (var id in salaryData) {
+    salaryBase[id] = salaryData[id];
+    var chg = document.getElementById('sal-chg-' + id);
+    var el  = document.getElementById('sal-' + id);
+    if (chg) { chg.textContent = '✓ Saved'; chg.style.color = 'var(--text-faint)'; }
+    if (el)  el.style.color = 'var(--text)';
+    (function(c){ setTimeout(function(){ if(c) c.textContent=''; }, 2000); })(chg);
+  }
+  xpToast('💾 All salary changes saved!', 'var(--success)');
+}
+
+/* ════════════════════════════
+   STAR RATING
+════════════════════════════ */
+function rateTeacher(event, id) {
+  var container = document.getElementById('stars-' + id);
+  if (!container) return;
+  var rect = container.getBoundingClientRect();
+  var x = event.clientX - rect.left;
+  var stars = Math.ceil(x / (rect.width / 5));
+  stars = Math.max(1, Math.min(5, stars));
+  var spans = container.querySelectorAll('span');
+  for (var i = 0; i < spans.length; i++) {
+    spans[i].style.color = i < stars ? 'var(--accent-light)' : 'var(--border2)';
+  }
+  var txt = document.getElementById('rating-txt-' + id);
+  if (txt) txt.textContent = stars + '.0 / 5.0';
+  var labels = ['', 'Poor', 'Below Average', 'Average', 'Good', 'Excellent'];
+  xpToast('⭐ Rated ' + stars + '/5 — ' + labels[stars], 'var(--accent-light)');
+}
+
+/* ════════════════════════════
+   XP TOAST
+════════════════════════════ */
+function xpToast(msg, color) {
+  var c  = document.getElementById('xp-toast');
+  var el = document.createElement('div');
+  el.className = 'toast-item';
+  el.style.borderColor = color || 'var(--primary)';
+  el.style.color       = color || 'var(--primary-light)';
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(function() {
+    el.style.animation = 'toastOut .3s ease forwards';
+    setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+  }, 2800);
+}
+
+/* ════════════════════════════
+   SEMESTER TABS (Teacher Dashboard)
+════════════════════════════ */
+function switchSem(n) {
+  for (var i = 1; i <= 6; i++) {
+    var el = document.getElementById('sem-' + i);
+    var btn = document.getElementById('sem-tab-' + i);
+    if (el)  el.classList.add('hidden');
+    if (btn) btn.className = 'btn btn-ghost btn-sm';
+  }
+  var target = document.getElementById('sem-' + n);
+  var active  = document.getElementById('sem-tab-' + n);
+  if (target) target.classList.remove('hidden');
+  if (active) active.className = 'btn btn-primary btn-sm';
+}
+
+function filterSem(val, n) {
+  var rows = document.querySelectorAll('#t-sem-' + n + ' tbody tr');
+  for (var i = 0; i < rows.length; i++) {
+    var score = parseInt(rows[i].getAttribute('data-score') || '100');
+    if (val === 'top')  rows[i].style.display = score >= 80 ? '' : 'none';
+    else if (val === 'risk') rows[i].style.display = score < 60  ? '' : 'none';
+    else rows[i].style.display = '';
+  }
+}
+
+/* ════════════════════════════
+   ADMIN SIDEBAR SECTIONS
+════════════════════════════ */
+function adminSection(id) {
+  var sections = ['perf','quizzes','students','xp','settings'];
+  for (var i = 0; i < sections.length; i++) {
+    var el  = document.getElementById('adm-' + sections[i]);
+    var nav = document.getElementById('adm-nav-' + sections[i]);
+    if (el)  el.classList.add('hidden');
+    if (nav) nav.classList.remove('active');
+  }
+  var target = document.getElementById('adm-' + id);
+  var active  = document.getElementById('adm-nav-' + id);
+  if (target) target.classList.remove('hidden');
+  if (active) active.classList.add('active');
+}
+
+function filterTeacherCards(grade) {
+  var cards = document.querySelectorAll('.teacher-perf-card');
+  for (var i = 0; i < cards.length; i++) {
+    if (!grade || cards[i].getAttribute('data-grade') === grade) {
+      cards[i].style.display = '';
+    } else {
+      cards[i].style.display = 'none';
+    }
+  }
+}
+
+/* ════════════════════════════
+   MULTIPLAYER ROOM (WebSocket)
+════════════════════════════ */
+var MP = {
+  apiBase: window.location.origin,
+  ws: null,
+  code: null,
+  playerId: null,
+  isHost: false,
+  myName: '',
+  selectedAnswer: null,
+  currentQuestion: null
+};
+
+function mpEnterLobby() {
+  // Show lobby, hide room views
+  document.getElementById('mp-lobby').classList.remove('hidden');
+  document.getElementById('mp-room').classList.add('hidden');
+  document.getElementById('mp-game-area').classList.add('hidden');
+  document.getElementById('mp-gameover').classList.add('hidden');
+  // Pre-fill names
+  var defaultName = (currentRole === 'teacher') ? 'Prof. Ravi Kumar' : (currentRole === 'admin' ? 'Admin' : 'Arjun');
+  if (!document.getElementById('mp-host-name').value) document.getElementById('mp-host-name').value = defaultName;
+  if (!document.getElementById('mp-join-name').value) document.getElementById('mp-join-name').value = defaultName;
+  mpRefreshRooms();
+}
+
+function mpRefreshRooms() {
+  var box = document.getElementById('mp-active-rooms');
+  fetch(MP.apiBase + '/api/rooms').then(function(r){return r.json();}).then(function(rooms){
+    if (!rooms || rooms.length === 0) {
+      box.innerHTML = '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:14px;">No active rooms. <a href="#" onclick="mpRefreshRooms();return false;" style="color:var(--primary-light);">Refresh</a></div>';
+      return;
+    }
+    box.innerHTML = '';
+    rooms.forEach(function(r){
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12.5px;';
+      row.innerHTML = '<span><b style="font-family:var(--mono);color:var(--accent-light);">'+r.code+'</b> · '+r.subject+' · '+(r.players||[]).length+'p</span><button class="btn btn-sm btn-ghost">Join</button>';
+      row.onclick = function(){
+        document.getElementById('mp-join-code').value = r.code;
+        var nm = document.getElementById('mp-join-name');
+        if (!nm.value) nm.value = 'Guest' + Math.floor(Math.random()*999);
+        mpJoinRoom();
+      };
+      box.appendChild(row);
+    });
+  }).catch(function(){
+    box.innerHTML = '<div style="font-size:12px;color:var(--danger);text-align:center;padding:14px;">⚠ Connection error</div>';
+  });
+}
+
+function mpCreateRoom() {
+  var name = document.getElementById('mp-host-name').value.trim();
+  if (!name) { xpToast('⚠ Please enter your name', 'var(--danger)'); return; }
+  var subject = document.getElementById('mp-subject').value;
+  var qcount = parseInt(document.getElementById('mp-q-count').value);
+  MP.myName = name;
+  fetch(MP.apiBase + '/api/rooms', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({host_name: name, subject: subject, total_questions: qcount})
+  }).then(function(r){
+    if (!r.ok) throw new Error('Create failed');
+    return r.json();
+  }).then(function(data){
+    MP.code = data.code;
+    MP.playerId = data.host_id;
+    MP.isHost = true;
+    mpConnectWS();
+  }).catch(function(e){
+    xpToast('⚠ Failed to create room', 'var(--danger)');
+    console.error(e);
+  });
+}
+
+function mpJoinRoom() {
+  var name = document.getElementById('mp-join-name').value.trim();
+  var code = document.getElementById('mp-join-code').value.trim().toUpperCase();
+  if (!name || !code) { xpToast('⚠ Name & room code required', 'var(--danger)'); return; }
+  MP.myName = name;
+  fetch(MP.apiBase + '/api/rooms/join', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({code: code, player_name: name})
+  }).then(function(r){
+    if (!r.ok) return r.json().then(function(e){ throw new Error(e.detail || 'Join failed'); });
+    return r.json();
+  }).then(function(data){
+    MP.code = data.code;
+    MP.playerId = data.player_id;
+    MP.isHost = false;
+    mpConnectWS();
+  }).catch(function(e){
+    xpToast('⚠ ' + e.message, 'var(--danger)');
+  });
+}
+
+function mpConnectWS() {
+  // Show room view
+  document.getElementById('mp-lobby').classList.add('hidden');
+  document.getElementById('mp-room').classList.remove('hidden');
+  document.getElementById('mp-room-code').textContent = MP.code;
+
+  if (MP.isHost) {
+    document.getElementById('mp-host-controls').classList.remove('hidden');
+    document.getElementById('mp-waiting-msg').classList.add('hidden');
+  } else {
+    document.getElementById('mp-host-controls').classList.add('hidden');
+    document.getElementById('mp-waiting-msg').classList.remove('hidden');
+  }
+
+  var proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  var wsUrl = proto + '//' + window.location.host + '/api/ws/room/' + MP.code + '/' + MP.playerId;
+  MP.ws = new WebSocket(wsUrl);
+
+  MP.ws.onopen = function(){ xpToast('✓ Connected to room ' + MP.code, 'var(--success)'); };
+  MP.ws.onerror = function(){ xpToast('⚠ Connection error', 'var(--danger)'); };
+  MP.ws.onclose = function(){ /* silent */ };
+  MP.ws.onmessage = function(ev){
+    try {
+      var msg = JSON.parse(ev.data);
+      mpHandleMessage(msg);
+    } catch(e){ console.error(e); }
+  };
+}
+
+function mpHandleMessage(msg) {
+  switch(msg.type) {
+    case 'state':
+      mpRenderRoom(msg.room);
+      break;
+    case 'player_joined':
+      xpToast('👋 ' + msg.player.name + ' joined', 'var(--info)');
+      break;
+    case 'player_left':
+      xpToast('👋 A player left', 'var(--text-muted)');
+      break;
+    case 'chat':
+      mpAppendChat(msg.from, msg.message);
+      break;
+    case 'game_start':
+      xpToast('🚀 Game starting!', 'var(--accent-light)');
+      document.getElementById('mp-host-controls').classList.add('hidden');
+      document.getElementById('mp-waiting-msg').classList.add('hidden');
+      document.getElementById('mp-game-area').classList.remove('hidden');
+      document.getElementById('mp-room-status').textContent = 'LIVE';
+      document.getElementById('mp-room-status').className = 'mp-status-pill active';
+      break;
+    case 'question':
+      mpRenderQuestion(msg);
+      break;
+    case 'answer_result':
+      mpShowAnswerResult(msg);
+      break;
+    case 'scores':
+      mpRenderLeaderboard(msg.players, false);
+      break;
+    case 'game_over':
+      mpShowGameOver(msg.leaderboard);
+      break;
+  }
+}
+
+function mpRenderRoom(room) {
+  if (!room) return;
+  var list = document.getElementById('mp-players-list');
+  list.innerHTML = '';
+  (room.players || []).forEach(function(p){
+    var row = document.createElement('div');
+    row.className = 'mp-player-row' + (p.is_host ? ' host' : '');
+    row.innerHTML = '<span class="mp-player-name">'+(p.is_host?'👑 ':'')+p.name+(p.id===MP.playerId?' <span style="color:var(--text-faint);font-weight:400;">(you)</span>':'')+'</span><span class="mp-player-score">'+p.score+' pts</span>';
+    list.appendChild(row);
+  });
+  document.getElementById('mp-player-count').textContent = (room.players || []).length;
+}
+
+function mpAppendChat(from, message) {
+  var box = document.getElementById('mp-chat');
+  var d = document.createElement('div');
+  d.className = 'mp-chat-msg';
+  d.innerHTML = '<b>'+escapeHtml(from)+':</b> ' + escapeHtml(message);
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
+function escapeHtml(s){return String(s).replace(/[&<>"']/g, function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+
+function mpSendChat() {
+  var inp = document.getElementById('mp-chat-input');
+  var v = inp.value.trim();
+  if (!v || !MP.ws || MP.ws.readyState !== 1) return;
+  MP.ws.send(JSON.stringify({type:'chat', message: v}));
+  inp.value = '';
+}
+
+function mpStartGame() {
+  if (!MP.ws || MP.ws.readyState !== 1) return;
+  MP.ws.send(JSON.stringify({type:'start'}));
+}
+
+function mpRenderQuestion(msg) {
+  MP.currentQuestion = msg;
+  MP.selectedAnswer = null;
+  document.getElementById('mp-q-progress').textContent = 'Question ' + (msg.index+1) + ' of ' + msg.total;
+  document.getElementById('mp-q-text').textContent = msg.question;
+  document.getElementById('mp-answer-feedback').textContent = '';
+  document.getElementById('mp-answer-feedback').style.color = '';
+  var box = document.getElementById('mp-options');
+  box.innerHTML = '';
+  var labels = ['A','B','C','D','E','F'];
+  msg.options.forEach(function(opt, i){
+    var btn = document.createElement('button');
+    btn.className = 'mp-opt';
+    btn.setAttribute('data-testid', 'mp-opt-' + i);
+    btn.innerHTML = '<div class="mp-opt-lbl">'+labels[i]+'</div><div>'+escapeHtml(opt)+'</div>';
+    btn.onclick = function(){ mpSelectAnswer(i, btn); };
+    box.appendChild(btn);
+  });
+}
+
+function mpSelectAnswer(idx, el) {
+  if (MP.selectedAnswer !== null) return;
+  MP.selectedAnswer = idx;
+  var opts = document.querySelectorAll('#mp-options .mp-opt');
+  for (var i=0;i<opts.length;i++) {
+    opts[i].classList.add('disabled');
+    if (i===idx) opts[i].classList.add('selected');
+  }
+  if (MP.ws && MP.ws.readyState === 1) {
+    MP.ws.send(JSON.stringify({type:'answer', answer_index: idx}));
+  }
+  document.getElementById('mp-answer-feedback').textContent = '⏳ Waiting for others...';
+  document.getElementById('mp-answer-feedback').style.color = 'var(--text-muted)';
+}
+
+function mpShowAnswerResult(msg) {
+  var opts = document.querySelectorAll('#mp-options .mp-opt');
+  for (var i=0;i<opts.length;i++) {
+    if (i === msg.correct_index) opts[i].classList.add('correct');
+    else if (i === MP.selectedAnswer && !msg.correct) opts[i].classList.add('wrong');
+  }
+  var fb = document.getElementById('mp-answer-feedback');
+  if (msg.correct) {
+    fb.textContent = '✓ Correct! +' + msg.gained + ' pts';
+    fb.style.color = 'var(--success)';
+  } else {
+    fb.textContent = '✗ Wrong answer';
+    fb.style.color = 'var(--danger)';
+  }
+}
+
+function mpRenderLeaderboard(players, isFinal) {
+  var sorted = players.slice().sort(function(a,b){return b.score - a.score;});
+  var box = document.getElementById(isFinal ? 'mp-final-leaderboard' : 'mp-leaderboard');
+  box.innerHTML = '';
+  sorted.forEach(function(p, i){
+    var row = document.createElement('div');
+    var rankClass = i===0?' gold':i===1?' silver':i===2?' bronze':'';
+    row.className = 'mp-leader-row' + rankClass;
+    var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+    row.innerHTML = '<div class="mp-leader-rank">'+medal+'</div><div style="flex:1;font-weight:600;font-size:13.5px;">'+escapeHtml(p.name)+(p.id===MP.playerId?' <span style="color:var(--text-faint);font-weight:400;">(you)</span>':'')+'</div><div class="mp-player-score">'+p.score+' pts</div>';
+    box.appendChild(row);
+  });
+}
+
+function mpShowGameOver(leaderboard) {
+  document.getElementById('mp-game-area').classList.add('hidden');
+  document.getElementById('mp-gameover').classList.remove('hidden');
+  document.getElementById('mp-room-status').textContent = 'FINISHED';
+  document.getElementById('mp-room-status').className = 'mp-status-pill finished';
+  mpRenderLeaderboard(leaderboard, true);
+  xpToast('🏁 Game over!', 'var(--accent-light)');
+}
+
+function mpCopyCode() {
+  if (!MP.code) return;
+  navigator.clipboard && navigator.clipboard.writeText(MP.code);
+  xpToast('📋 Code copied: ' + MP.code, 'var(--success)');
+}
+
+function mpLeaveRoom() {
+  if (MP.ws) { try { MP.ws.close(); } catch(e){} }
+  MP.ws = null; MP.code = null; MP.playerId = null; MP.isHost = false;
+  MP.selectedAnswer = null; MP.currentQuestion = null;
+  document.getElementById('mp-chat').innerHTML = '';
+  mpEnterLobby();
+}
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f1d32258b906068',t:'MTc3NzExODUxNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"7f7b0fd8732c4326aae4b9d58d5c514a","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>>
